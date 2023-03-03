@@ -1,0 +1,125 @@
+﻿@using Microsoft.Owin;
+@using Microsoft.AspNet.Identity;
+@using Microsoft.AspNet.Identity.Owin;
+@using System.Linq;
+@using System.Configuration;
+@using System.Data.SqlClient;
+@{
+    Layout = "~/Views/Shared/_LayoutRental.cshtml";
+    ViewBag.Title = "Projections";
+}
+
+
+
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white card-outline card-success">
+                            <div class="inner text-success">
+                                <h3>Customers:</h3>
+                                <p>Home / Customers</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                        </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header card-header-success">
+                            <h4 class="card-title"><i class="fa fa-handshake"></i> Projections</h4>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <span class="text-right mr-1 mt-10"><button id="RaiseTransactions" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-edit text-success"></i> Raise Transactions</button></span>
+                            @*<span class="text-right"><button id="docs-create-view" type="button" class="btn btn-light"><i class="fa fa-plus-circle"></i> Add Documents</button></span>*@
+                        </div>
+                        <div class="card-body">
+                            <table id="projection-table" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Trans Date</th>
+                                        <th>Tenant Name</th>
+                                        <th>Trans Name</th>
+                                        <th>Trans Proposed</th>
+                                        <th>Trans Actual</th>
+                                        <th>Balance</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+
+        </div>
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content -->
+<!-- Modal -->
+<div class="modal fade" id="create-transaction-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Create Transaction</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            @*<label class="bmd-label-floating">Tenant Name</label>*@
+                            <select id="transaction-for" class="form-control"><option value="0">All Tenants</option></select>
+                            @*<input id="tenant-name" class="form-control" type="text">*@
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-user text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused input-group-focus">
+                            <label class="bmd-label-floating">Date Transaction Raised</label>
+                            <input id="date-transaction-raised" class="form-control" type="date">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="far fa-calendar-alt text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button id="close" type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="transaction-final-create" type="button" class="btn btn-light"><i class="fa fa-edit text-success"></i> Create</button>
+                <button id="transaction-final-wait" type="button" class="btn btn-light"><i class="fas fa-spinner fa-pulse text-success"></i> Please wait...</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>

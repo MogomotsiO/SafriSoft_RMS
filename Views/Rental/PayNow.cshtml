@@ -1,0 +1,240 @@
+﻿@using System.Configuration;
+@using System.Data.SqlClient;
+@using System.Globalization;
+@using SafriSoftv1._3.Models.Data;
+@{
+    Layout = "~/Views/Shared/_LayoutPay.cshtml";
+    ViewBag.title = "PayNow";
+
+    var transactionFor = ViewBag.TransactionFor;
+    var transactionDate = ViewBag.Date;
+    decimal? total = 0;
+    var listTransaction = new List<Transaction>();
+    var listTransactionDummy = new List<Transaction>();
+    NumberFormatInfo cZA = new CultureInfo("en-ZA", false).NumberFormat;
+    cZA.CurrencyPositivePattern = 2;
+
+    using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString()))
+    {
+        conn.Open();
+        var orderCmd = conn.CreateCommand();
+        orderCmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transaction] Where TenantId = '{1}' AND TransactionDate = '{2}' AND (TransactionCode = '{3}' OR TransactionCode = '{4}')", conn.Database, transactionFor, DateTime.Parse(transactionDate), 10, 20);
+
+
+        using (var reader = orderCmd.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                var transaction = new Transaction();
+                transaction.Id = reader.GetInt32(0);
+                transaction.TransactionCode = reader.GetInt32(1);
+                transaction.TransactionName = reader.GetString(2);
+                transaction.TransactionAmount = reader.GetDecimal(3);
+                transaction.TransactionDate = reader.GetDateTime(4);
+                transaction.TenantId = reader.GetInt32(5);
+                listTransactionDummy.Add(transaction);
+                listTransaction.Add(transaction);
+            }
+            reader.NextResult();
+            reader.Close();
+        }
+
+
+        foreach (var transaction in listTransactionDummy)
+        {
+            var TransLinkCmd = conn.CreateCommand();
+            TransLinkCmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transaction] Where TransactionLink = '{1}'", conn.Database, transaction.Id);
+
+
+            using (var reader = TransLinkCmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var transactionLink = new Transaction();
+                    transactionLink.Id = reader.GetInt32(0);
+                    transactionLink.TransactionCode = reader.GetInt32(1);
+                    transactionLink.TransactionName = reader.GetString(2);
+                    transactionLink.TransactionAmount = reader.GetDecimal(3);
+                    transactionLink.TransactionDate = reader.GetDateTime(4);
+                    transactionLink.TenantId = reader.GetInt32(5);
+                    listTransaction.Add(transactionLink);
+                }
+                reader.NextResult();
+                reader.Close();
+            }
+        }
+        
+
+        conn.Close();
+    }
+
+
+}
+
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <p id="transaction-for" hidden>@ViewBag.TransactionFor</p>
+    <p id="transaction-date" hidden>@ViewBag.Date</p>
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white border-left border-info safri-input-style">
+                            <div class="inner">
+                                <h3>Products:</h3>
+                                <p>Home / Stock</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-truck text-dark"></i>
+                            </div>
+                        </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12 table-responsive">
+                    <div class="card">
+                        <div class="card-header card-header-success">
+                            <h4 class="card-title"><i class="fas fa-dollar-sign"></i> Pay Now</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <h4>
+                                        <img id="logo" src="" alt="" style="height:100px;" />
+                                    </h4>
+                                </div>
+                                <!-- /.col -->
+                            </div>
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <b>Date:</b> <span id="order-date"></span><br>
+                                            @*<b>Order ID: </b><span id="order-id"></span><br>*@
+                                            <b>VAT Number:</b> <span id="vat-number"></span>
+                                        </td>
+                                        <td>
+                                            From
+                                            <address>
+                                                <strong><span id="organisation-name"></span></strong><br>
+                                                <span id="organisation-street"></span><br>
+                                                <span id="organisation-suburb"></span>, <span id="organisation-city"></span> <span id="organisation-code"></span><br>
+                                                Phone: <span id="organisation-cell"></span><br>
+                                                Email: <span id="organisation-email"></span>
+                                            </address>
+                                        </td>
+                                        <td>
+                                            To
+                                            <address>
+                                                <strong><span id="customer-name"></span></strong><br>
+                                                <span id="customer-address"></span><br>
+                                                Phone: <span id="customer-cell"></span><br>
+                                                Email: <span id="customer-email"></span>
+                                            </address>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- /.col -->
+                            <!-- /.row -->
+                            <!-- Table row -->
+                            <table class="table table-borderless">
+                                <thead style="background-color: #28a745;color:#fff;font-family: 'Times New Roman', Times, serif;">
+                                    <tr>
+                                        <th>Transaction Date</th>
+                                        @*<th>TenantId</th>*@
+                                        <th>Transaction Name</th>
+                                        <th>Transaction Code</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transaction in listTransaction)
+                                    {
+                                    <tr>
+                                        <td id="">@transaction.TransactionDate.ToString("dd MMMM yyyy")</td>
+                                        @*<td id="">@transaction.TenantId</td>*@
+                                        <td id="">@transaction.TransactionName</td>
+                                        <td id="">@transaction.TransactionCode</td>
+                                        @if (transaction.TransactionCode == 15 || transaction.TransactionCode == 25)
+                                        {
+                                            <td><span id=""></span>@(string.Format(cZA, "{0:C}", transaction.TransactionAmount)) -</td>
+                                            total = total - transaction.TransactionAmount;
+                                        }
+                                        else
+                                        {
+                                            <td><span id=""></span>@(string.Format(cZA, "{0:C}", transaction.TransactionAmount))</td>
+                                            total = total + transaction.TransactionAmount;
+                                        }
+
+                                    </tr>
+                                        
+                                    }
+
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td style="text-align:right;"><b>Subtotal:</b></td>
+                                        <td><span id=""></span>@(string.Format(cZA, "{0:C}", total))</td>
+                                    </tr>
+                                    @*<tr>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align:right;"><b>VAT (15%):</b></td>
+                        <td><span id="vat-amount"></span></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align:right;"><b>Shipping:</b></td>
+                        <td><span id="shipping-amount"></span></td>
+                    </tr>*@
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td style="text-align:right;"><b>Total:</b></td>
+                                        <td><span id=""></span>@(string.Format(cZA, "{0:C}", total))</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- /.row -->
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <p class="lead">Banking Details:</p>
+                                            <b>Account Name:</b> <span id="account-name"></span><br>
+                                            <b>Bank:</b> <span id="bank-name"></span><br>
+                                            <b>Account Number:</b> <span id="account-no"></span><br>
+                                            <b>Branch:</b> <span id="bank-branch"></span><br>
+                                            <b>Branch Code:</b> <span id="branch-code"></span><br>
+                                            <b>Reference:</b> <span id="client-reference"></span>
+                                        </td>
+                                        <td>
+                                            <p class="lead"><b>Tax Invoice</b></p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.col -->
+                        <div class="modal-footer justify-content-right">
+                            <img id="payFastLogo" src="~/Content/images/Instant EFT by Payfast.png" alt="" style="height:50px;" />
+                            <button id="order-final-create" type="button" class="btn btn-light" onclick="window.location.href = '/Rental/OnlineOnceOffPayment?TransactionFor=' + $('#transaction-for').text() + '&Date=' + $('#transaction-date').text()"><i class="fa fa-credit-card text-info"></i> Pay Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

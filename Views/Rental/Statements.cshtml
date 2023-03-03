@@ -1,0 +1,72 @@
+﻿@{
+    Layout = "~/Views/Shared/_LayoutRental.cshtml";
+    ViewBag.Title = "Statements";
+}
+
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white card-outline card-success">
+                            <div class="inner text-success">
+                                <h3>Customers:</h3>
+                                <p>Home / Customers</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                        </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header card-header-success">
+                            <h4 class="card-title"><i class="fas fa-file-invoice"></i> Statements</h4>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <span class="text-right mr-1"><button id="CreateUnit" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-home text-success"></i> Create Unit</button></span>
+                            @*<span class="text-right"><button id="docs-create-view" type="button" class="btn btn-light"><i class="fa fa-plus-circle"></i> Add Documents</button></span>*@
+                        </div>
+                        <div class="card-body">
+                            <table id="statement-table" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Number</th>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Rooms</th>
+                                        <th>Sharing</th>
+                                        <th>Price</th>
+                                        <th>Assign</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+
+        </div>
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content -->

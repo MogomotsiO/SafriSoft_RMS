@@ -1,0 +1,78 @@
+﻿@using System.Configuration;
+@using System.Data.SqlClient;
+@using System.Globalization;
+@{
+
+    Layout = null;
+
+    var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString());
+    conn.Open();
+    var cmd = conn.CreateCommand();
+    cmd.CommandText = string.Format("SELECT [Id],[UnitNumber],[UnitName],[UnitDescription],[UnitRooms],[UnitPrice],[Sharing],[Status] from [{0}].[dbo].[Unit]", conn.Database);
+
+    NumberFormatInfo cZA = new CultureInfo("en-ZA", false).NumberFormat;
+    cZA.CurrencyPositivePattern = 2;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+</head>
+<body>
+    <div>
+        <div class="invoice p-3 mb-3">
+            <!-- title row -->
+            <div class="row">
+                <div class="col-12">
+                    <h3 style="font-family: 'Times New Roman', Times, serif;color:#28a745;">
+                        Units Report
+                    </h3>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- Table row -->
+            <div class="row">
+                <div class="col-12 table-responsive">
+                    <table class="table table-borderless">
+                        <thead style="background-color: #28a745;color:#fff;font-family: 'Times New Roman', Times, serif;font-size:10px;">
+                            <tr>
+                                <th>Number</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Rooms</th>
+                                <th>Price</th>
+                                <th>Sharing</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size:10px;">
+                            @using (var reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    <tr style="border-top-color:#17a2b8 !important;">
+                                        @*<td>@(reader.GetInt32(0))</td>*@
+                                        <td>@(reader.GetString(1))</td>
+                                        <td>@(reader.GetString(2))</td>
+                                        <td>@(reader.GetString(3))</td>
+                                        <td>@(reader.GetInt32(4))</td>
+                                        <td>@(string.Format(cZA, "{0:C}", reader.GetDecimal(5)))</td>
+                                        <td>@(reader.GetString(6))</td>
+                                        <td>@(reader.GetString(7))</td>
+                                    </tr>
+                                }
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.col -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

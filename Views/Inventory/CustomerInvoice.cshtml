@@ -1,0 +1,186 @@
+﻿@using System.Globalization;
+@model SafriSoftv1._3.Models.InvoiceViewModel
+@{
+    Layout = null;
+    NumberFormatInfo cZA = new CultureInfo( "en-ZA", false ).NumberFormat;
+    cZA.CurrencyPositivePattern = 2;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>CustomerInvoice</title>
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+
+</head>
+<body>
+    <script type="text/javascript">
+        console.log($('#view-order-id').val());
+        var orderData = {
+            'OrderId': $('#view-order-id').val()
+        }
+        $.ajax({
+            url: '/api/Inventory/GetInvoiceData',
+            method: 'POST',
+            dataType: 'json',
+            data: orderData
+        }).done(function (data) {
+            console.log(data);
+            $('#logo').attr('src', data[0].OrganisationLogo);
+            $('#organisation-name').text(data[0].OrganisationName);
+            $('#organisation-email').text(data[0].OrganisationEmail);
+            $('#organisation-cell').text(data[0].OrganisationCell);
+            $('#organisation-street').text(data[0].OrganisationStreet);
+            $('#organisation-suburb').text(data[0].OrganisationSuburb);
+            $('#organisation-city').text(data[0].OrganisationCity);
+            $('#organisation-code').text(data[0].OrganisationCode);
+            $('#customer-name').text(data[0].CustomerName);
+            $('#customer-address').text(data[0].CustomerAddress);
+            $('#customer-email').text(data[0].CustomerEmail);
+            $('#customer-cell').text(data[0].CustomerCell);
+            $('#order-date').text(data[0].DateOrderCreated);
+            $('#order-id').text(data[0].OrderId);
+            $('#vat-number').text(data[0].VATNumber);
+            $('#table-order-id').text(data[0].OrderId);
+            $('#num-of-orders').text(data[0].NumberOfItems);
+            $('#product-name').text(data[0].ProductName);
+            $('#order-worth').text(new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data[0].OrderWorth));
+            $('#order-worth-snd').text(new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data[0].OrderWorth));
+            $('#account-name').text(data[0].AccountName);
+            $('#account-no').text(data[0].AccountNo);
+            $('#bank-name').text(data[0].BankName);
+            $('#bank-branch').text(data[0].BranchName);
+            $('#branch-code').text(data[0].BranchCode);
+            $('#client-reference').text(data[0].ClientReference.toUpperCase() + "/" + data[0].OrderId.substr(1, data[0].OrderId.length));
+            $('#vat-amount').text(new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data[0].VatAmount));
+            $('#shipping-amount').text(new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data[0].ShippingCost));
+            $('#order-total').text(new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data[0].InvoiceTotal));
+        });
+    </script>
+    <div class="p-3 mb-3" style="border: 1px solid gray;">
+        <!-- title row -->
+        <div class="row">
+            <div class="col-lg-12">
+                <h4>
+                    <input type="text" id="view-order-id" hidden value="@ViewBag.Title" />
+                    <img id="logo" src="@Model.OrganisationLogo" alt="" style="height:150px;" />
+                </h4>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- info row -->
+        <div class="row">
+            <div class="col-lg-12 table-responsive">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <b>Date:</b> @Model.DateOrderCreated <br>
+                                <b>Order ID: </b>@Model.OrderId<br>
+                                <b>VAT Number:</b> @Model.VATNumber
+                            </td>
+                            <td>
+                                From:
+                                <address>
+                                    <strong>@Model.OrganisationName</strong><br>
+                                    @Model.OrganisationStreet<br>
+                                    @Model.OrganisationSuburb, @Model.OrganisationCity @Model.OrganisationCode<br>
+                                    Phone: @Model.OrganisationCell<br>
+                                    Email: @Model.OrganisationEmail
+                                </address>
+                            </td>
+                            <td>
+                                To:
+                                <address>
+                                    <strong>@Model.CustomerName</strong><br>
+                                    @Model.CustomerAddress<br>
+                                    Phone: @Model.CustomerCell<br>
+                                    Email: @Model.CustomerEmail
+                                </address>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+        <!-- Table row -->
+        <div class="row">
+            <div class="col-12 table-responsive">
+                <table class="table table-borderless">
+                    <thead style="background-color: #17a2b8;color:#fff;font-family: 'Times New Roman', Times, serif;">
+                        <tr>
+                            <th>Order Id</th>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="table-order-id">@Model.OrderId</td>
+                            <td id="product-name">@Model.ProductName</td>
+                            <td id="num-of-orders">@Model.NumberOfItems</td>
+                            <td>@(string.Format(cZA, "{0:C}", Model.OrderWorth))</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td style="text-align:right;"><b>Subtotal:</b></td>
+                            <td>@(string.Format(cZA, "{0:C}", Model.OrderWorth))</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td style="text-align:right;"><b>VAT (15%):</b></td>
+                            <td>@(string.Format(cZA, "{0:C}", Model.VatAmount))</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td style="text-align:right;"><b>Shipping:</b></td>
+                            <td>@(string.Format(cZA, "{0:C}", Model.ShippingCost))</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td style="text-align:right;"><b>Total:</b></td>
+                            <td>@(string.Format(cZA, "{0:C}", Model.InvoiceTotal))</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+        <div class="row">
+            <div class="col-lg-12 table-responsive">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <p class="lead">Banking Details:</p>
+                                <b>Account Name:</b> @Model.AccountName<br>
+                                <b>Bank:</b> @Model.BankName<br>
+                                <b>Account Number:</b> @Model.AccountNo<br>
+                                <b>Branch:</b> @Model.BranchName<br>
+                                <b>Branch Code:</b> @Model.BranchCode<br>
+                                <b>Reference:</b> @(Model.ClientReference.ToUpper() + "/" + Model.OrderId.Substring(1,Model.OrderId.Length - 1))
+                            </td>
+                            <td>
+                                <p class="lead" style="margin-top:50px !important;">Tax Invoice</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.col -->
+        </div>
+    </div>
+</body>
+
+</html>
+

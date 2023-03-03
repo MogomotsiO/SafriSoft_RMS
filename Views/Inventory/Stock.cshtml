@@ -1,0 +1,316 @@
+﻿@{
+    ViewBag.title = "Stock";
+}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white border-left border-info safri-input-style">
+                            <div class="inner">
+                                <h3>Products:</h3>
+                                <p>Home / Stock</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-truck text-dark"></i>
+                            </div>
+                        </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <div class="card">
+                        <div class="card-header card-header-info">
+                            <h4 class="card-title"><i class="fas fa-truck"></i> Stock</h4>
+                        </div>
+                        <div class="card-body">
+                            <span class="text-right mr-1"><button id="CreateProduct" type="submit" class="btn btn-light"><i class="fa fa-truck text-info"></i> Create product</button></span>
+                            <span class="text-right"><button id="ImportProduct" type="submit" class="btn btn-light"><i class="fa fa-upload text-info"></i> Import products</button></span>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <table id="products-table" class="table">
+                                <thead>
+                                    <tr>
+                                        <th># Product</th>
+                                        <th>Product Image</th>
+                                        <th>Product Code</th>
+                                        <th>Product Category</th>
+                                        <th>Product Name</th>
+                                        <th>Product Reference</th>
+                                        <th>Selling Price</th>
+                                        <th># Sold</th>
+                                        <th># Available</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+
+        </div>
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content -->
+<!-- Modal -->
+<div class="modal fade" id="creat-product-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Create Product</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-5 col-lg-12">
+                        <input id="img-source" type="text" />
+                        <input id="img-filename" type="text" />
+                        <img id="logo" src="" alt="" style="height:120px;" />
+
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Product Code</label>
+                            <input id="product-code" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Product Category</label>
+                            <input id="product-category" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Product Name</label>
+                            <input id="product-name" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Quantity</label>
+                            <input id="product-available" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-cart-plus text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Selling Price</label>
+                            <input id="product-price" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-dollar-sign text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            @*<label class="bmd-label-floating">Product Reference</label>*@
+                            <input id="product-reference" disabled class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-hashtag text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <div class="custom-file">
+                                <input class="custom-file-input text-light" id="input-logo" type="file">
+                                <label class="custom-file-label safri-file-input" for="input-logo">Product Image</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="product-final-create" type="button" class="btn btn-light"><i class="fa fa-truck text-info"></i> Create</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="edit-product-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Edit Product</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-5 col-lg-12">
+                        <input id="edit-img-source" type="text" />
+                        <input id="edit-img-filename" type="text" />
+                        <img id="edit-logo" src="" alt="" style="height:120px;" />
+
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Product Code</label>
+                            <input id="edit-product-code" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Product Category</label>
+                            <input id="edit-product-category" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Product Name</label>
+                            <input id="edit-product-name" data-bind="value: ProductName" class="form-control" type="text">
+                            <input id="edit-product-id" hidden class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Quantity</label>
+                            <input id="edit-product-available" data-bind="value: ProductAvailable" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-cart-plus text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Selling Price</label>
+                            <input id="edit-product-price" data-bind="value: SellingPrice" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-dollar-sign text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            @*<label class="bmd-label-floating">Product Reference</label>*@
+                            <input id="edit-product-reference" disabled class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-hashtag text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <div class="custom-file">
+                                <input class="custom-file-input text-light" id="input-logo" type="file">
+                                <label class="custom-file-label safri-file-input" for="input-logo">Product Image</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="product-final-update" type="button" class="btn btn-light"><i class="fa fa-truck text-info"></i> Update</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!-- Upload Data -->
+<div class="modal fade" id="upload-excel">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="tenants-documents-title" class="modal-title">@*<i class="fa fa-plus"></i>*@Upload Products</h3>
+                <input type="text" id="tenant-id" hidden />
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-header card-header-info">
+                        <h4 class="card-title"><i class="fa fa-paste"></i> Upload Excel Data</h4>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div id="dropzone" class="fade">
+                            <h3>Drag & Drop File</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>

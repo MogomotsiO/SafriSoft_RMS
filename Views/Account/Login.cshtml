@@ -1,0 +1,123 @@
+﻿@using SafriSoftv1._3.Models
+@using Microsoft.Owin;
+@using Microsoft.AspNet.Identity;
+@using Microsoft.AspNet.Identity.Owin;
+@using System.Linq;
+@model LoginViewModel
+@{
+    Layout = null;
+    ViewBag.Title = "Log in";
+    string userId = IdentityExtensions.GetUserId(User.Identity);
+    if (userId != "" && userId != null)
+    {
+        Response.Redirect("~/Inventory/Index", false);
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>SafriSoft | Inventory</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="../../plugins/fontawesome-free/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- icheck bootstrap -->
+    <link rel="stylesheet" href="../../plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- Theme style -->
+    <link href="~/creativetim/css/material-dashboard.css?v=2.1.2" rel="stylesheet" />
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+    <!-- Google Font: Source Sans Pro -->
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+
+    <!-- Safri Custom Styles -->
+    <link href="~/Content/Site.css" rel="stylesheet" />
+
+    <!-- Template Main CSS File -->
+    <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body id="hero" class="hold-transition login-page">
+    <div class="login-box">
+        <!-- /.login-logo -->
+        <div class="card">
+            <div class="card-body login-card-body justify-content-center">
+                <div class="login-logo"><a href="~/Home/Index"><img src="../../assets/img/iconOnly.png" alt="" class="logo-login"></a></div>
+                <p class="login-box-msg">Safri Inventory</p>
+
+                @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+                {
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Email</label>
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control"})
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span><i class="fas fa-envelope text-info"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @*<div class="mb-3">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Organisation</label>
+                            @Html.TextBoxFor(m => m.OrganisationName, new { @class = "form-control"})
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span><i class="fas fa-users text-info"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>*@
+                    <div class="mb-3">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Password</label>
+                            @Html.PasswordFor(m => m.Password, new { @class = "form-control"})
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span><i class="fas fa-lock text-info"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <p>Not a member? <a href="#!">Register</a></p>
+                    </div>
+                    <div class="row">
+                        <div class="col-8">
+                            @*<div class="icheck-primary">
+                                    @Html.CheckBoxFor(m => m.RememberMe)
+                                    @Html.LabelFor(m => m.RememberMe)
+                                </div>*@
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-light btn-block"><i class="fas fa-unlock-alt text-info"></i> Unlock</button>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                }
+
+            </div>
+            <!-- /.login-card-body -->
+        </div>
+    </div>
+    <!-- /.login-box -->
+    <!-- jQuery -->
+    <script src="../../plugins/jquery/jquery.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="../../plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="../../dist/js/adminlte.min.js"></script>
+    <script src="~/creativetim/js/core/popper.min.js"></script>
+    <script src="~/creativetim/js/core/bootstrap-material-design.min.js"></script>
+    <script src="~/creativetim/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+    <script src="~/creativetim/js/material-dashboard.js"></script>
+
+</body>
+</html>

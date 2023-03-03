@@ -1,0 +1,88 @@
+﻿@using System.Configuration;
+@using System.Data.SqlClient;
+@using System.Globalization;
+@{
+
+    Layout = null;
+
+    var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString());
+    conn.Open();
+    var cmd = conn.CreateCommand();
+    cmd.CommandText = string.Format("SELECT [OrderId],[NumberOfItems],[CustomerName],[OrderStatus],[ExpectedDeliveryDate],[ProductName],[OrderWorth],[Status] from [{0}].[dbo].[Orders] where Status = 'Active' and (OrderStatus = 'Processed' or OrderStatus = 'Packaged') Order By OrderProgress ASC, Status ASC", conn.Database);
+
+    NumberFormatInfo cZA = new CultureInfo("en-ZA", false).NumberFormat;
+    cZA.CurrencyPositivePattern = 2;
+
+    var dt = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
+    var dtToday = DateTime.UtcNow.Subtract(TimeSpan.FromDays(0));
+
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+</head>
+<body>
+    <div>
+        <div class="invoice p-3 mb-3">
+            <!-- title row -->
+            <div class="row">
+                <div class="col-12">
+                    <h3 style="font-family: 'Times New Roman', Times, serif;color:#17a2b8;">
+                        Attention Required
+                    </h3>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- Table row -->
+            <div class="row">
+                <div class="col-12 table-responsive">
+                    <table class="table table-borderless">
+                        <thead style="background-color: #17a2b8;color:#fff;font-family: 'Times New Roman', Times, serif;font-size:10px;">
+                            <tr>
+                                <th>Id</th>
+                                <th>Qty</th>
+                                <th>C Name</th>
+                                <th>Status</th>
+                                <th>Delivery</th>
+                                <th>P Name</th>
+                                <th>Order Worth</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size:10px;">
+                            @using (var reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    var exp = reader.GetString(4);
+                                    var dtExp = Convert.ToDateTime(exp.Substring(exp.IndexOf("/") + 1,(exp.LastIndexOf("/")) - (exp.IndexOf("/") + 1)) + "/" + exp.Substring(0,exp.IndexOf("/")) + "/" + exp.Substring(exp.LastIndexOf("/") + 1,4));
+                                    
+                                    if (dtExp < dtToday) {
+                                        <tr>
+                                            <td>@(reader.GetString(0))</td>
+                                            <td style="text-align:center;">@(reader.GetInt32(1))</td>
+                                            <td>@(reader.GetString(2))</td>
+                                            <td>@(reader.GetString(3))</td>
+                                            <td style="background-color:red; color:#fff;">@(reader.GetString(4))</td>
+                                            <td>@(reader.GetString(5))</td>
+                                            <td>@(string.Format(cZA, "{0:C}", reader.GetDecimal(6)))</td>
+                                            <td>@(reader.GetString(7))</td>
+                                        </tr>
+                                    }
+                                }
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.col -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

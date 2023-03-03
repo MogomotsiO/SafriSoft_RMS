@@ -1,0 +1,371 @@
+﻿@using Microsoft.Owin;
+@using Microsoft.AspNet.Identity;
+@using Microsoft.AspNet.Identity.Owin;
+@using System.Linq;
+@using System.Configuration;
+@using System.Data.SqlClient;
+@{
+
+    var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString());
+    conn.Open();
+    var cmd = conn.CreateCommand();
+    cmd.CommandText = string.Format("SELECT [Id],[CustomerName] from [{0}].[dbo].[Customer] where Status = 'Active'", conn.Database);
+
+    var cmdProducts = conn.CreateCommand();
+    cmdProducts.CommandText = string.Format("SELECT [Id],[ProductName],[ProductReference] from [{0}].[dbo].[Product] where Status = 'Active'", conn.Database);
+
+}
+@{
+    ViewBag.Title = "Customers";
+}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white card-outline card-info">
+                            <div class="inner text-info">
+                                <h3>Customers:</h3>
+                                <p>Home / Customers</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-user-friends text-info"></i>
+                            </div>
+                        </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header card-header-info">
+                            <h4 class="card-title"><i class="fas fa-user-friends"></i> Customers</h4>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <span class="text-right mr-1"><button id="CreateCustomer" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-user text-info"></i> Create customer</button></span>
+                            <span class="text-right"><button id="order-create-view" type="button" class="btn btn-light"><i class="fa fa-shopping-cart text-info"></i> Create Order</button></span>
+                        </div>
+                        <div class="card-body">
+                            <table id="customer-table" class="table">
+                                <thead>
+                                    <tr>
+                                        <th># Customer</th>
+                                        <th>Customer Name</th>
+                                        <th>Customer Email</th>
+                                        <th>Customer Phone #</th>
+                                        <th>Customer Address</th>
+                                        <th>Date Customer Created</th>
+                                        <th># Orders</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+
+        </div>
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content -->
+<!-- Modal -->
+<div class="modal fade" id="creat-customer-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Create Customer</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Customer Name</label>
+                            <input id="customer-name" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-user text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Customer Email</label>
+                            <input id="customer-email" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-envelope text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Customer Cell#</label>
+                            <input id="customer-cell" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-phone text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Customer Address</label>
+                            <input id="customer-address" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-home text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="customer-final-create" type="button" class="btn btn-light"><i class="fa fa-user text-info"></i> Create</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!-- Update Customer Modal -->
+<div class="modal fade" id="edit-customer-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Edit Customer</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Customer Name</label>
+                            <input id="edit-customer-id" hidden class="form-control" type="text">
+                            <input id="edit-customer-name" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-user text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Customer Email</label>
+                            <input id="edit-customer-email" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-envelope text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Customer Cell#</label>
+                            <input id="edit-customer-cell" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-phone text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Customer Address</label>
+                            <input id="edit-customer-address" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-home text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="customer-final-update" type="button" class="btn btn-light"><i class="fa fa-user text-info"></i> Update</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="creat-order-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Create Order</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-6">
+                        <div class="input-group form-group bmd-form-group">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-light dropdown-toggle" aria-expanded="false" type="button" data-toggle="dropdown">
+                                    Customers
+                                </button>
+                                <ul class="dropdown-menu">
+                                    @using (var reader = cmd.ExecuteReader())
+                                    {
+                                        while (reader.Read())
+                                        {
+                                            <li id="@reader.GetInt32(0)-customer" name="@reader.GetString(1)" class="dropdown-item" onclick="populateCustomer(this.id)">@reader.GetString(1)</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                            <input id="customer-name-input" class="form-control p-3" disabled type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-user text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-6">
+                        <div class="input-group form-group bmd-form-group">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-light dropdown-toggle" aria-expanded="false" type="button" data-toggle="dropdown">
+                                    Products
+                                </button>
+                                <ul class="dropdown-menu">
+                                    @using (var reader = cmdProducts.ExecuteReader())
+                                    {
+                                        while (reader.Read())
+                                        {
+                                            <li id="@reader.GetString(2).Replace('/','_')" name="@reader.GetString(1)" class="dropdown-item" onclick="populateProduct(this.id)">@reader.GetString(1)</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                            <input id="product-name-input" class="form-control p-3" disabled type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Quantity</label>
+                            <input id="number-of-items" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-shopping-cart text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Number Of Days For Delivery</label>
+                            <input id="number-of-days" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Shipping Cost</label>
+                            <input id="shipping-cost" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-info"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="order-final-create" type="button" class="btn btn-light"><i class="fa fa-shopping-cart text-info"></i> Create</button>
+                <button id="order-final-wait" type="button" class="btn btn-light"><i class="fas fa-spinner fa-pulse text-success"></i> Please wait...</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="customer-orders">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="customer-orders-title" class="modal-title">@*<i class="fa fa-plus"></i>*@</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="customer-order-table" class="table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Product Name</th>
+                                    <th>Delivery Date</th>
+                                    <th>Invoice Amount</th>
+                                    <th>Status</th>
+                                    <th>Progress</th>
+                                    <th>%</th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>

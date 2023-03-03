@@ -1,0 +1,78 @@
+﻿@using System.Configuration;
+@using System.Data.SqlClient;
+@using System.Globalization;
+@{
+
+    Layout = null;
+
+    var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString());
+    conn.Open();
+    var cmd = conn.CreateCommand();
+    cmd.CommandText = string.Format("SELECT [ProductName],[ProductReference],[ItemsSold],[ItemsAvailable],[SellingPrice],[Status],[ProductCategory],[ProductCode] from [{0}].[dbo].[Product] ORDER By Status ASC", conn.Database);
+
+    NumberFormatInfo cZA = new CultureInfo("en-ZA", false).NumberFormat;
+    cZA.CurrencyPositivePattern = 2;
+
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+</head>
+<body>
+    <div>
+        <div class="invoice p-3 mb-3">
+            <!-- title row -->
+            <div class="row">
+                <div class="col-12">
+                    <h3 style="font-family: 'Times New Roman', Times, serif;color:#17a2b8;">
+                        Inventory Report
+                    </h3>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- Table row -->
+            <div class="row">
+                <div class="col-12 table-responsive">
+                    <table class="table table-borderless">
+                        <thead style="background-color: #17a2b8;color:#fff;font-family: 'Times New Roman', Times, serif;font-size:10px;">
+                            <tr>
+                                <th>Product Code</th>
+                                <th>Product Name</th>
+                                <th>Product Reference</th>
+                                <th>Items Sold</th>
+                                <th>Items Available</th>
+                                <th>Selling Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size:10px;">
+                            @using (var reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    <tr>
+                                        <td>@(reader.GetString(7))</td>
+                                        <td>@(reader.GetString(0))</td>
+                                        <td>@(reader.GetString(1))</td>
+                                        <td style="text-align:center;">@(reader.GetInt32(2))</td>
+                                        <td style="text-align:center;">@(reader.GetInt32(3))</td>
+                                        <td>@(string.Format(cZA, "{0:C}", reader.GetDouble(4)))</td>
+                                        <td>@(reader.GetString(5))</td>
+                                    </tr>
+                                }
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.col -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

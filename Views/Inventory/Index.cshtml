@@ -1,0 +1,516 @@
+﻿@{
+    ViewBag.title = "Dashboard";
+}
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <div class="content-header">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            @*<div class="small-box bg-white border-left border-info safri-input-style">
+                                <div class="inner">
+                                    <h3>Dashboard:</h3>
+                                    <p>Home / Dashboad</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-tasks text-dark"></i>
+                                </div>
+                            </div>*@
+                        </div>
+                        <div class="col-sm-6">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.content-header -->
+            <!-- Main content -->
+            <div class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-3 col-12">
+                            <div class="card card-stats">
+                                <div class="card-header card-header-info card-header-icon">
+                                    <div class="card-icon">
+                                        <i class="fas fa-user-friends"></i>
+                                    </div>
+                                    <p class="card-category">Customers</p>
+                                    <h1 id="customer-count" class="card-titlec"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="stats">
+                                        <i class="fas fa-user-friends"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            @*<div class="small-box bg-gradient-info">
+            <div class="inner">
+                <h3 id="customer-count"></h3>
+
+                <p>Customers</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-user-friends"></i>
+            </div>
+        </div>*@
+                        </div>
+                        <div class="col-md-3 col-sm-3 col-12">
+                            <div class="card card-stats">
+                                <div class="card-header card-header-info card-header-icon">
+                                    <div class="card-icon">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <p class="card-category">Stock Available</p>
+                                    <h1 id="stock-available-count" class="card-titlec"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="stats">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            @*<div class="small-box bg-gradient-info">
+            <div class="inner">
+                <h3 id="stock-available-count"></h3>
+
+                <p>Stock Available</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-truck"></i>
+            </div>
+        </div>*@
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-md-3 col-sm-3 col-12">
+                            <div class="card card-stats">
+                                <div class="card-header card-header-info card-header-icon">
+                                    <div class="card-icon">
+                                        <i class="fa fa-thumbs-up"></i>
+                                    </div>
+                                    <p class="card-category">Products Sold</p>
+                                    <h1 id="stock-sold-count" class="card-titlec"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="stats">
+                                        <i class="fa fa-thumbs-up"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            @*<div class="small-box bg-gradient-info">
+                                <div class="inner">
+                                    <h3 id="stock-sold-count"></h3>
+
+                                    <p>Products Sold</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fa fa-thumbs-up"></i>
+                                </div>
+                            </div>*@
+                        </div>
+                        <div class="col-md-3 col-sm-3 col-12">
+                            <div class="card card-stats">
+                                <div class="card-header card-header-info card-header-icon">
+                                    <div class="card-icon">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </div>
+                                    <p class="card-category">Rand Value Sold</p>
+                                    <h1 id="stock-sold-value" class="card-titlec"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="stats">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            @*<div class="small-box bg-gradient-info">
+                                <div class="inner">
+                                    <h3>R <span id="stock-sold-value"></span></h3>
+
+                                    <p>Rand Value Sold</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                            </div>*@
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6 col-12">
+                            <div class="card card-stats">
+                                <div class="card-header card-header-danger card-header-icon">
+                                    <div class="card-icon">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                    <p class="card-category">Orders processesed</p>
+                                    <h1 id="orders-processed" class="card-titlec"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="stats">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-md-3 col-sm-6 col-12">
+                            <div class="card card-stats">
+                                <div class="card-header card-header-warning card-header-icon">
+                                    <div class="card-icon">
+                                        <i class="fas fa-shopping-bag"></i>
+                                    </div>
+                                    <p class="card-category">Orders packaged</p>
+                                    <h1 id="orders-packaged" class="card-titlec"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="stats">
+                                        <i class="fas fa-shopping-bag"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-md-3 col-sm-6 col-12">
+                            <div class="card card-stats">
+                                <div class="card-header card-header-info card-header-icon">
+                                    <div class="card-icon">
+                                        <i class="fas fa-truck-moving"></i>
+                                    </div>
+                                    <p class="card-category">Orders InTransit</p>
+                                    <h1 id="orders-intransit" class="card-titlec"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="stats">
+                                        <i class="fas fa-truck-moving"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.col -->
+                        <div class="col-md-3 col-sm-6 col-12">
+                            <div class="card card-stats">
+                                <div class="card-header card-header-success card-header-icon">
+                                    <div class="card-icon">
+                                        <i class="fas fa-home"></i>
+                                    </div>
+                                    <p class="card-category">Successfully delivered</p>
+                                    <h1 id="orders-delivered" class="card-titlec"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="stats">
+                                        <i class="fas fa-home"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header card-header-info">
+                                    <h4 class="card-title"><i class="fas fa-chart-pie"></i> Pie Chart</h4>
+                                </div>
+                                <div class="card-body table-responsive">
+                                    <div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div></div></div><div class="chartjs-size-monitor-shrink"><div></div></div></div>
+                                    <canvas width="752" height="300" class="chartjs-render-monitor" id="pieChart" style="width: 731px; height: 385px; display: block; min-height: 385px; max-height: 385px; max-width: 100%;"></canvas>
+                                </div>
+                                <!-- /.card-body -->
+                            </div>
+                            <!-- BAR CHART
+    <div class="card card-light">
+        <div class="card-header">
+            <h3 class="card-title"><i class="far fa-chart-bar"></i> Bar Chart</h3>
+
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="chart">
+            <canvas id="barChart" style="min-height: 400px; height: 400px; max-height: 400px; max-width: 100%;"></canvas>
+        </div>
+    </div>-->
+                            <!-- /.card -->
+                        </div>
+                        <div class="col-xs-12 col-md-6">
+                            <div class="card">
+                                <div class="card-header card-header-info">
+                                    <h4 class="card-title"><i class="fas fa-chart-pie"></i> Generate Reports</h4>
+                                </div>
+                                <div class="card-body table-responsive">
+                                    <a href="~/Inventory/CustomerReportPdf">
+                                        <div class="info-box bg-gradient-white cursor-pointer">
+                                            <span class="info-box-icon bg-info"><i class="fas fa-user-friends"></i></span>
+
+                                            <div class="info-box-content">
+                                                <span class="info-box-number">Customer Report</span>
+                                                <span class="info-box-text">Generate customer report.</span>
+                                            </div>
+                                            <!-- /.info-box-content -->
+                                        </div>
+                                    </a>
+                                    <a href="~/Inventory/InvetoryReportPdf">
+                                        <div class="info-box mt-3 bg-gradient-white cursor-pointer">
+                                            <span class="info-box-icon bg-info"><i class="fa fa-truck"></i></span>
+
+                                            <div class="info-box-content">
+                                                <span class="info-box-number">Inventory Report</span>
+                                                <span class="info-box-text">Generate report to see how many items you have available and how many you've sold.</span>
+                                            </div>
+                                            <!-- /.info-box-content -->
+                                        </div>
+                                    </a>
+                                    <a href="~/Inventory/OrdersReportPdf">
+                                        <div class="info-box mt-3 bg-gradient-white cursor-pointer">
+                                            <span class="info-box-icon bg-info"><i class="fas fa-shopping-cart"></i></span>
+
+                                            <div class="info-box-content">
+                                                <span class="info-box-number">Orders Report</span>
+                                                <span class="info-box-text">Generate report to see the number of orders and their statuses.</span>
+                                            </div>
+                                            <!-- /.info-box-content -->
+                                        </div>
+                                    </a>
+                                    <a href="~/Inventory/AttentionReportPdf">
+                                        <div class="info-box mt-3 bg-gradient-white cursor-pointer">
+                                            <span class="info-box-icon bg-info"><i class="fa fa-exclamation"></i></span>
+
+                                            <div class="info-box-content">
+                                                <span class="info-box-number">Attention</span>
+                                                <span class="info-box-text">Generate report to view system notifications.</span>
+                                            </div>
+                                            <!-- /.info-box-content -->
+                                        </div>
+                                    </a>
+                                        @*<div class="card-header">
+                <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> Clients Location</h3>
+
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div id="networkGeoLocationHeatmap" style="min-height: 400px; height: 400px; max-height: 400px; max-width: 100%;">
+            </div>*@
+
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                            <div class="row">
+
+
+                                <!-- /.card -->
+                            </div>
+                        </div>
+                    </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content -->
+    <!-- /.content-wrapper -->
+    <!-- ./wrapper -->
+    <!-- Open Street Map-->
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+
+    <!-- Leaflet heat map includes-->
+    <script src="~/Scripts/heatmap.js"></script>
+    <script src="~/Scripts/leaflet-heatmap.js"></script>
+
+
+    <script>
+        window.onload = function () {
+            $(function () {
+                /* ChartJS
+                 * -------
+                 * Here we will create a few charts using ChartJS
+                 */
+
+                //--------------
+                //- AREA CHART -
+                //--------------
+
+                // Get context with jQuery - using jQuery's .get() method.
+                //var areaChartCanvas = $('#areaChart').get(0).getContext('2d');
+
+                var areaChartData = {
+                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    datasets: [
+                        {
+                            label: 'Sales',
+                            backgroundColor: '#17a2b8',
+                            borderColor: 'rgba(60,141,188,0.8)',
+                            pointRadius: false,
+                            pointColor: '#3b8bba',
+                            pointStrokeColor: 'rgba(60,141,188,1)',
+                            pointHighlightFill: '#fff',
+                            pointHighlightStroke: 'rgba(60,141,188,1)',
+                            data: [28, 48, 40, 19, 86, 27, 90, 70, 75, 60, 50, 40]
+                        },
+                        {
+                            label: 'Stock',
+                            backgroundColor: '#ffc107',
+                            borderColor: 'rgba(210, 214, 222, 1)',
+                            pointRadius: false,
+                            pointColor: 'rgba(210, 214, 222, 1)',
+                            pointStrokeColor: '#c1c7d1',
+                            pointHighlightFill: '#fff',
+                            pointHighlightStroke: 'rgba(220,220,220,1)',
+                            data: [65, 59, 80, 81, 56, 55, 40, 58, 70, 30, 20, 10]
+                        },
+                    ]
+                }
+
+                //var areaChartOptions = {
+                //    maintainAspectRatio: false,
+                //    responsive: true,
+                //    legend: {
+                //        display: false
+                //    },
+                //    scales: {
+                //        xAxes: [{
+                //            gridLines: {
+                //                display: false,
+                //            }
+                //        }],
+                //        yAxes: [{
+                //            gridLines: {
+                //                display: false,
+                //            }
+                //        }]
+                //    }
+                //}
+
+                //// This will get the first returned node in the jQuery collection.
+                //var areaChart = new Chart(areaChartCanvas, {
+                //    type: 'line',
+                //    data: areaChartData,
+                //    options: areaChartOptions
+                //})
+
+
+
+                //-------------
+                //- BAR CHART -
+                //-------------
+                var barChartCanvas = $('#barChart').get(0).getContext('2d')
+                var barChartData = jQuery.extend(true, {}, areaChartData)
+                var temp0 = areaChartData.datasets[0]
+                var temp1 = areaChartData.datasets[1]
+                barChartData.datasets[0] = temp1
+                barChartData.datasets[1] = temp0
+
+                var barChartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    datasetFill: false
+                }
+
+                var barChart = new Chart(barChartCanvas, {
+                    type: 'bar',
+                    data: barChartData,
+                    options: barChartOptions
+                })
+
+            });
+            var donutData;
+            $.ajax({
+                url: '/api/Inventory/Home',
+                method: 'GET',
+                dataType: 'json'
+            }).done(function (data) {
+                if (data.Success) {
+                    console.log(data);
+                    $("#customer-count").text(data.Customers);
+                    $("#stock-available-count").text(data.StockAvailable);
+                    $("#stock-sold-count").text(data.StockSold);
+                    $("#orders-processed").text(data.OrdersProcessed);
+                    $("#orders-packaged").text(data.OrdersPackaged);
+                    $("#orders-intransit").text(data.OrdersInTransit);
+                    $("#orders-delivered").text(data.OrdersDelivered);
+                    $("#stock-sold-value").text(new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data.RandValueSold));
+
+                    donutData = {
+                        labels: [
+                            'Products Available', 
+                            'Products Sold',
+                        ],
+                        datasets: [
+                            {
+                                data: [data.StockAvailable,data.StockSold],
+                                backgroundColor : ['#17a2b8', '#28a745'],
+                            }
+                        ]
+                    }
+
+                     //-------------
+                     //- PIE CHART -
+                     //-------------
+                     // Get context with jQuery - using jQuery's .get() method.
+                     var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
+                     var pieData        = donutData;
+                     var pieOptions     = {
+                       maintainAspectRatio : false,
+                       responsive : true,
+                     }
+                     //Create pie or douhnut chart
+                     // You can switch between pie and douhnut using the method below.
+                     var pieChart = new Chart(pieChartCanvas, {
+                       type: 'pie',
+                       data: pieData,
+                       options: pieOptions      
+                     })
+
+                } else {
+                    console.log(data);
+                    toastr.error('An error occured while trying to save user, contact administrator!');
+                }
+
+            });
+
+     
+
+        }
+    </script>
+
+    <script>
+        try {
+            var heatMapData = {
+                max: 8,
+                data: []
+            };
+
+            heatMapData.data.push({ lat: parseFloat(-29), lng: parseFloat(24), count: 2 });
+
+            var baseLayer = L.tileLayer('https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=0I6f3JCVL7PRhmvKYxRb', { attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>', });
+
+            var cfg = {
+                "radius": 2,
+                "maxOpacity": .8,
+                "scaleRadius": true,
+                "useLocalExtrema": true,
+                latField: 'lat',
+                lngField: 'lng',
+                valueField: 'count'
+            };
+
+            var heatmapLayer = new HeatmapOverlay(cfg);
+
+            var networkGeoLocationHeatmap = new L.map('networkGeoLocationHeatmap', {
+                center: new L.LatLng(-29, 24),
+                zoom: 5,
+                layers: [baseLayer, heatmapLayer]
+            });
+
+            heatmapLayer.setData(heatMapData);
+        } catch (err) {
+
+        }
+        
+    </script>

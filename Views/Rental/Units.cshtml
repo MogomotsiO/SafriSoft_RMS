@@ -1,0 +1,599 @@
+﻿@using Microsoft.Owin;
+@using Microsoft.AspNet.Identity;
+@using Microsoft.AspNet.Identity.Owin;
+@using System.Linq;
+@using System.Configuration;
+@using System.Data.SqlClient;
+@{
+    Layout = "~/Views/Shared/_LayoutRental.cshtml";
+    ViewBag.Title = "Units";
+}
+
+
+
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white card-outline card-success">
+                            <div class="inner text-success">
+                                <h3>Customers:</h3>
+                                <p>Home / Customers</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                        </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header card-header-success">
+                            <h4 class="card-title"><i class="fas fa-building"></i> Units</h4>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <span class="text-right mr-1"><button id="CreateUnit" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-home text-success"></i> Create Unit</button></span>
+                            @*<span class="text-right"><button id="docs-create-view" type="button" class="btn btn-light"><i class="fa fa-plus-circle"></i> Add Documents</button></span>*@
+                        </div>
+                        <div class="card-body">
+                            <table id="unit-table" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Number</th>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Rooms</th>
+                                        <th>Sharing</th>
+                                        <th>Price</th>
+                                        <th>Assign</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+
+        </div>
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content -->
+<!-- Modal -->
+<div class="modal fade" id="create-unit-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Create Unit</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Unit Number</label>
+                            <input id="unit-number" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-edit text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Unit Name</label>
+                            <input id="unit-name" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-edit text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Unit Description</label>
+                            <input id="unit-description" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-edit text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Unit Rooms</label>
+                            <input id="unit-rooms" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-home text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Sharing</label>
+                            <select id="unit-sharing" class="form-control"><option value="Yes">Yes</option><option value="No">No</option></select>
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-users text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Unit Price</label>
+                            <input id="unit-price" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-building text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="unit-final-create" type="button" class="btn btn-light"><i class="fa fa-home text-success"></i> Create</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!-- Update Unit Modal -->
+<div class="modal fade" id="edit-unit-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Edit Unit</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Unit Number</label>
+                            <input id="edit-unit-id" hidden class="form-control" type="text">
+                            <input id="edit-unit-number" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-edit text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Unit Name</label>
+                            <input id="edit-unit-name" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-edit text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Unit Description</label>
+                            <input id="edit-unit-description" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-edit text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Unit Rooms</label>
+                            <input id="edit-unit-rooms" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-home text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Sharing</label>
+                            <select id="edit-unit-sharing" class="form-control"><option value="Yes">Yes</option><option value="No">No</option></select>
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-users text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Unit Price</label>
+                            <input id="edit-unit-price" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-building text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="unit-final-update" type="button" class="btn btn-light"><i class="fa fa-user text-success"></i> Update</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="create-nok-modalNot">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Next Of kins</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-6">
+                        <div class="input-group form-group bmd-form-group">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-light dropdown-toggle" aria-expanded="false" type="button" data-toggle="dropdown">
+                                    Customers
+                                </button>
+                                <ul class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="customer-name-input" class="form-control p-3" disabled type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-user text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-6">
+                        <div class="input-group form-group bmd-form-group">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-light dropdown-toggle" aria-expanded="false" type="button" data-toggle="dropdown">
+                                    Products
+                                </button>
+                                <ul class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="product-name-input" class="form-control p-3" disabled type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-truck text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Quantity</label>
+                            <input id="number-of-items" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-shopping-cart text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Number Of Days For Delivery</label>
+                            <input id="number-of-days" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Shipping Cost</label>
+                            <input id="shipping-cost" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-truck text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="order-final-create" type="button" class="btn btn-light"><i class="fa fa-shopping-cart text-success"></i> Create</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="assign-tenant-unit">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="assign-title" class="modal-title">@*<i class="fa fa-plus"></i>*@</h3>
+                <input type="text" id="tenant-id" hidden />
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-header card-header-success">
+                        <h4 class="card-title"><i class="fa fa-user-plus"></i> Assign tenants to unit</h4>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        @*<span class="text-right mr-1"><button id="CreateTenantNok" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-user"></i> Create NOK</button></span>*@
+                    </div>
+                    <div class="card-body">
+                        <table id="assign-tenant-table" class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Cell</th>
+                                    <th>T/F</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="create-noks-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Create NOK</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">NOK Name</label>
+                            <input id="nok-name" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-user text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">NOK Email</label>
+                            <input id="nok-email" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-envelope text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">NOK Cell</label>
+                            <input id="nok-cell" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-phone text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Relationship</label>
+                            <select id="nok-relationship" class="form-control">
+                                <option value="Mother">Mother</option>
+                                <option value="Father">Father</option>
+                                <option value="Brother">Brother</option>
+                                <option value="Sister">Sister</option>
+                                <option value="Spouse">Spouse</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-home text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="tenant-nok-final-create" type="button" class="btn btn-light"><i class="fa fa-user text-success"></i> Create</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="update-noks-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Update NOK</h4>
+                <input type="text" id="nok-id" hidden />
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">NOK Name</label>
+                            <input id="edit-nok-name" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text bg-white border-white">
+                                    <span class="fa fa-user text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">NOK Email</label>
+                            <input id="edit-nok-email" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-envelope text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">NOK Cell</label>
+                            <input id="edit-nok-cell" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-phone text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                        <div class="input-group form-group bmd-form-group is-focused">
+                            <label class="bmd-label-floating">Relationship</label>
+                            <select id="edit-nok-relationship" class="form-control">
+                                <option value="Mother">Mother</option>
+                                <option value="Father">Father</option>
+                                <option value="Brother">Brother</option>
+                                <option value="Sister">Sister</option>
+                                <option value="Spouse">Spouse</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fa fa-home text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="tenant-nok-final-update" type="button" class="btn btn-light"><i class="fa fa-user text-success"></i> Update</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="tenants-documents">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="tenants-documents-title" class="modal-title">@*<i class="fa fa-plus"></i>*@</h3>
+                <input type="text" id="tenant-id" hidden />
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div id="dropzone" class="fade">
+                            <h3>Drag & Drop File</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table id="tenant-document-table" class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Filename</th>
+                                    <th>Date Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>

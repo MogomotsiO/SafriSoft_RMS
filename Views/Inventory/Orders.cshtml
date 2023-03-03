@@ -1,0 +1,255 @@
+﻿@{
+    ViewBag.title = "Orders";
+}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white card-outline card-info">
+                        <div class="inner text-info">
+                            <h3>Manage Orders:</h3>
+                            <p>Home / Orders</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-shopping-cart text-info"></i>
+                        </div>
+                    </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    
+                    <div class="card">
+                        <div class="card-header card-header-info">
+                            <h4 class="card-title"><i class="fas fa-shopping-cart"></i> Orders</h4>
+                        </div>
+                        <div class="card-body">
+                            <table id="order-table" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>View</th>
+                                        <th>Order #</th>
+                                        <th>Product</th>
+                                        <th># Items</th>
+                                        <th>Customer Name</th>
+                                        <th>Date Order Created</th>
+                                        <th>Expected Delivery Date</th>
+                                        <th>Invoice Amount</th>
+                                        <th>Order Status</th>
+                                        <th>Order Progress</th>
+                                        <th>%</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+
+        </div>
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content -->
+<!-- Modal -->
+<div class="modal fade" id="view-order">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="view-order-title" class="modal-title">@*<i class="fa fa-plus"></i>*@</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="timeline">
+                    <!-- ko foreach: OrderAuditData -->
+                    <div class="time-label">
+                        <span class="" data-bind="text: DateCreated, class: Theme"></span>
+                    </div>
+                    <!-- /.timeline-label -->
+                    <!-- timeline item -->
+                    <div>
+                        <i class="fas fa-user" data-bind="class: Theme"></i>
+                        <div class="timeline-item">
+                            <span class="time" data-bind="text: DateCreated"></span>
+                            <h3 class="timeline-header"><a href="#" data-bind="text: UserName"></a></h3>
+
+                            <div class="timeline-body" data-bind="text: Description"></div>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- END timeline item -->
+                    <div>
+                        <i class="fas fa-clock bg-gray"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                @*<button id="btn-invoice-view" type="button" class="btn btn-light" onclick=""><i class="fas fa-file-invoice text-info"></i> Invoice</button>*@
+            </div>
+        </div>
+            
+        </div>
+        <!-- /.modal-content -->
+    </div>
+
+<!-- Invoice View Modal -->
+<div class="modal fade" id="invoice-view-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="view-order-title" class="modal-title">@*<i class="fa fa-plus"></i>*@</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="invoice p-3 mb-3">
+                    <!-- title row -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h4>
+                                <img id="logo" src="" alt="" style="height:150px;" />
+                            </h4>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- info row -->
+                    <div class="row">
+                        <div class="col-lg-12 table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <b>Date:</b> <span id="order-date"></span><br>
+                                            <b>Order ID: </b><span id="order-id"></span><br>
+                                            <b>VAT Number:</b> <span id="vat-number"></span>
+                                        </td>
+                                        <td>
+                                            From
+                                            <address>
+                                                <strong><span id="organisation-name"></span></strong><br>
+                                                <span id="organisation-street"></span><br>
+                                                <span id="organisation-suburb"></span>, <span id="organisation-city"></span> <span id="organisation-code"></span><br>
+                                                Phone: <span id="organisation-cell"></span><br>
+                                                Email: <span id="organisation-email"></span>
+                                            </address>
+                                        </td>
+                                        <td>
+                                            To
+                                            <address>
+                                                <strong><span id="customer-name"></span></strong><br>
+                                                <span id="customer-address"></span><br>
+                                                Phone: <span id="customer-cell"></span><br>
+                                                Email: <span id="customer-email"></span>
+                                            </address>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                    <!-- Table row -->
+                    <div class="row">
+                        <div class="col-12 table-responsive">
+                            <table class="table table-borderless">
+                                <thead style="background-color: #17a2b8;color:#fff;font-family: 'Times New Roman', Times, serif;">
+                                    <tr>
+                                        <th>Order Id</th>
+                                        <th>Product</th>
+                                        <th>Qty</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td id="table-order-id"></td>
+                                        <td id="product-name"></td>
+                                        <td id="num-of-orders"></td>
+                                        <td><span id="order-worth"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td style="text-align:right;"><b>Subtotal:</b></td>
+                                        <td><span id="order-worth-snd"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td style="text-align:right;"><b>VAT (15%):</b></td>
+                                        <td><span id="vat-amount"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td style="text-align:right;"><b>Shipping:</b></td>
+                                        <td><span id="shipping-amount"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td style="text-align:right;"><b>Total:</b></td>
+                                        <td><span id="order-total"></span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                    <div class="row">
+                        <div class="col-lg-12 table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <p class="lead">Banking Details:</p>
+                                            <b>Account Name:</b> <span id="account-name"></span><br>
+                                            <b>Bank:</b> <span id="bank-name"></span><br>
+                                            <b>Account Number:</b> <span id="account-no"></span><br>
+                                            <b>Branch:</b> <span id="bank-branch"></span><br>
+                                            <b>Branch Code:</b> <span id="branch-code"></span><br>
+                                            <b>Reference:</b> <span id="client-reference"></span>
+                                        </td>
+                                        <td>
+                                            <p class="lead"><b>Tax Invoice</b></p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="invoice-pdf" type="button" class="btn btn-light" onclick="window.location.href = '/Inventory/CustomerInvoicePdf?OrderId=' + $('#order-id').text().substr(1, $('#order-id').text().length);"><i class="fa fa-download text-info"></i> Generate PDF</button>
+            </div>
+        </div>
+
+    </div>
+    <!-- /.modal-content -->
+</div>

@@ -1,0 +1,82 @@
+﻿@using System.Configuration;
+@using System.Data.SqlClient;
+@using System.Globalization;
+@using SafriSoftv1._3.Models;
+@{
+
+    Layout = null;
+    SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+
+    var today = DateTime.Now;
+    var startDate = new DateTime(today.Year, today.Month, 1);
+    var endDate = startDate.AddMonths(1).AddDays(-1);
+
+    var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString());
+    conn.Open();
+    var cmd = conn.CreateCommand();
+    cmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transaction] Where TransactionDate >= '{1}' AND TransactionDate <= '{2}' AND (TransactionCode = '{3}' OR TransactionCode = '{4}')", conn.Database, startDate, endDate, 15, 25);
+
+    NumberFormatInfo cZA = new CultureInfo("en-ZA", false).NumberFormat;
+    cZA.CurrencyPositivePattern = 2;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+</head>
+<body>
+    <div>
+        <div class="invoice p-3 mb-3">
+            <!-- title row -->
+            <div class="row">
+                <div class="col-12">
+                    <h3 style="font-family: 'Times New Roman', Times, serif;color:#28a745;">
+                        Recieved Payments Report
+                    </h3>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- Table row -->
+            <div class="row">
+                <div class="col-12 table-responsive">
+                    <table class="table table-borderless">
+                        <thead style="background-color: #28a745;color:#fff;font-family: 'Times New Roman', Times, serif;font-size:10px;">
+                            <tr>
+                                <th>Transaction Date</th>
+                                <th>Tenant Name</th>
+                                <th>Transaction Code</th>
+                                <th>Transaction Name</th>
+                                <th>Transaction Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size:10px;">
+                            @using (var reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    var tenantId = reader.GetInt32(5);
+                                    var tenant = SafriSoft.Tenants.FirstOrDefault(x => x.Id == tenantId);
+                                    <tr style="border-top-color:#17a2b8 !important;">
+                                        @*<td>@(reader.GetInt32(0))</td>*@
+                                        <td>@(reader.GetDateTime(4).ToString("dd MMMM yyyy"))</td>
+                                        <td>@(tenant.TenantName)</td>
+                                        <td>@(reader.GetInt32(1))</td>
+                                        <td>@(reader.GetString(2))</td>
+                                        <td>@(string.Format(cZA, "{0:C}", reader.GetDecimal(3)))</td>
+                                    </tr>
+                                }
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.col -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

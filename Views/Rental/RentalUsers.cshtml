@@ -1,0 +1,341 @@
+﻿@{
+    Layout = "~/Views/Shared/_LayoutRental.cshtml";
+    ViewBag.title = "RentalUsers";
+}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white border-left border-success safri-input-style">
+                        <div class="inner">
+                            <h3>Users:</h3>
+                            <p>Home / Users / Manage Users</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users text-dark"></i>
+                        </div>
+                    </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <div class="card">
+                        <div class="card-header card-header-success">
+                            <h4 class="card-title"><i class="fas fa-users"></i> Users</h4>
+                        </div>
+                        <div class="card-body">
+                            <button id="CreateUser" type="submit" class="btn btn-light mr-1"><i class="fa fa-user-plus text-success"></i> Create user</button>
+                            <button id="EditOrganisation" type="submit" class="btn btn-light" onclick="editOrganisation()"><i class="fas fa-users text-success"></i> Organisation Details</button>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <table id="example1" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th># Orders</th>
+                                        <th>Brought F/W</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+
+        </div>
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content -->
+<!-- Modal -->
+<div class="modal fade" id="creat-user-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-user-plus"></i>*@ Create User</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body login-card-body">
+                <div class="row">
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Username</label>
+                            <input id="username" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-user text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <label class="bmd-label-floating">Email</label>
+                            <input id="user-email" class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-envelope text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <input id="user-role" disabled class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-user-cog text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <input id="organisation" disabled class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-users text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 col-lg-12">
+                        <div class="input-group form-group bmd-form-group">
+                            <input id="password" disabled class="form-control" type="text">
+                            <div class="input-group-append">
+                                <div class="input-group-text  bg-white border-white">
+                                    <span class="fas fa-lock text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="final-create" type="button" class="btn btn-light"><i class="fa fa-user-plus text-success"></i> Create</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="update-organisation-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@*<i class="fa fa-user-plus"></i>*@ Update Organisation</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form runat="server">
+                <div class="modal-body login-card-body">
+                    <div class="row">
+                        <div class="mb-5 col-lg-12">
+                            <input id="img-source" type="text" />
+                            <input id="img-filename" type="text" />
+                            <img id="logo" src="" alt="" style="height:100px;"/>
+
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group is-filled">
+                                <label class="bmd-label-floating">Organisation Name</label>
+                                <input id="organisation-name" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fas fa-user text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Organisation Email</label>
+                                <input id="organisation-email" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fas fa-envelope text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Organisation Cell</label>
+                                <input id="organisation-cell" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fas fa-phone text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Street</label>
+                                <input id="organisation-street" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fas fa-home text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Suburb</label>
+                                <input id="organisation-suburb" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fas fa-home text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">City</label>
+                                <input id="organisation-city" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fas fa-home text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Code</label>
+                                <input id="organisation-code" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fas fa-home text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <div class="custom-file">
+                                    <input class="custom-file-input text-light" id="input-logo" type="file">
+                                    <label class="custom-file-label safri-file-input" for="input-logo">Choose Logo</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-12">
+                            <h4>Banking Details</h4>
+                            <hr />
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Account Name</label>
+                                <input id="account-name" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fa fa-university text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Account No</label>
+                                <input id="account-no" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fa fa-university text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Bank</label>
+                                <input id="bank-name" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fa fa-university text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Branch</label>
+                                <input id="branch-name" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fa fa-university text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Branch Code</label>
+                                <input id="branch-code" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fa fa-university text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">Clients Reference</label>
+                                <input id="clients-reference" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fa fa-user-check text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 col-lg-6">
+                            <div class="input-group form-group bmd-form-group">
+                                <label class="bmd-label-floating">VAT Number</label>
+                                <input id="vat-number" class="form-control" type="text">
+                                <div class="input-group-append">
+                                    <div class="input-group-text  bg-white border-white">
+                                        <span class="fas fa-exclamation text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="final-update-organisation" type="button" class="btn btn-light" onclick="finalUpdateOrganisation()"><i class="fa fa-users text-success"></i> Update</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>

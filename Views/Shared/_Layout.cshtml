@@ -1,0 +1,293 @@
+﻿@using Microsoft.Owin;
+@using Microsoft.AspNet.Identity;
+@using Microsoft.AspNet.Identity.Owin;
+@using System.Linq;
+@{
+
+    string userId = IdentityExtensions.GetUserId(User.Identity);
+    if (userId == "" || userId == null)
+    {
+        Response.Redirect("~/Account/Login");
+    }
+    var username = "";
+    var userRole = "";
+    var organisation = "";
+    var userEmail = "";
+    try
+    {
+        ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+        var user = string.IsNullOrEmpty(userId) ? null : userManager.FindByIdAsync(userId).Result ?? null;
+        userEmail = user.Email;
+        var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+        organisation = organisationClaim.Value;
+        var usernameClaim = userManager.GetClaims(userId).First(x => x.Type == "Username");
+        username = usernameClaim.Value;
+        userRole = userManager.GetRoles(userId).First();
+    }
+    catch (Exception Ex)
+    {
+        Response.Redirect("~/Account/Login");
+    }
+    
+}
+<!DOCTYPE html>
+<html class="perfect-scrollbar-on">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafriSoft - @ViewBag.Title</title>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="../../plugins/fontawesome-free/css/all.min.css">
+    <!-- pace-progress -->
+    <link rel="stylesheet" href="../../plugins/pace-progress/themes/black/pace-theme-flat-top.css">
+
+    <!-- Theme style -->
+    <link href="~/creativetim/css/material-dashboard.css?v=2.1.2" rel="stylesheet" />
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="../../plugins/toastr/toastr.min.css">
+    <!-- Google Font: Source Sans Pro -->
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="../../plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="../../plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+    <!-- Open Street Map Stylesheet-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    <!-- Drag & Drop file upload -->
+    <link href="~/Backload/Client/blueimp/fileupload/css/jquery.fileupload.css" rel="stylesheet" />
+    <link href="~/Backload/Client/blueimp/fileupload/css/jquery.fileupload-ui.css" rel="stylesheet" />
+    <!-- Safri Custom Styles -->
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <!-- Template Main CSS File
+    <link href="../../assets/css/style.css" rel="stylesheet">-->
+
+</head>
+<body class="hold-transition sidebar-mini pace-info">
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-info navbar-info bg-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars text-info"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <button class="btn btn-block btn-info" type="button" onclick="@("window.location.href='" + @Url.Action("Index", "Rental") + "'");"><i class="nav-icon fas fa-project-diagram"></i> Rental Management</button>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                @*<li class="nav-item dropdown">
+                    <a class="nav-link" href="#" data-toggle="dropdown">
+                        <i class="fa fa-bell text-info"></i>
+                        <span class="badge badge-danger navbar-badge" data-bind="text: NumberOfNotifications"></span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-xl dropdown-menu-right">
+                        <span class="dropdown-item dropdown-header">Notifications</span>
+                        <div class="dropdown-divider"></div>
+                        <div data-bind="foreach: notifications">
+                            <a class="dropdown-item" href="#">
+                                <div class="media">
+                                    <span class="mr-3 mt-2 text-xs"><i class="fa fa-circle text-info"></i></span>
+                                    <img class="img-size-50 mr-3 img-circle" alt="User Avatar" src="../dist/img/new.png">
+                                    <div class="media-body">
+                                        <p class="text-bold text-md text-capitalize" data-bind="text: Name"></p>
+                                        <p class="" data-bind="text: Body"></p>
+                                        <p class="text-sm text-gray" data-bind="text: DateCreated"></p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item dropdown-footer" href="~/Inventory/Inbox"><i class="fas fa-comments text-info"></i> View All</a>
+                    </div>
+                </li>*@
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <img class="" style="height:100%;border-radius:50%;" src="../dist/img/new.png">
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <span class="dropdown-item dropdown-header"><img class="" style="height:75px;border-radius:50%;" src="../dist/img/new.png"></span>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user mr-2 text-info"></i> @(username)
+                        </a>
+                        @*<div class="dropdown-divider"></div>*@
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-envelope mr-2 text-info"></i> @(userEmail)
+                        </a>
+                        @*<div class="dropdown-divider"></div>*@
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-users mr-2 text-info"></i> Organisation: @(organisation)
+                            <p id="organisation-value" hidden>@(organisation)</p>
+                        </a>
+                        @*<div class="dropdown-divider"></div>*@
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog mr-2 text-info"></i> @(userRole)
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        @using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <a href="javascript:document.getElementById('logoutForm').submit()" class="dropdown-item dropdown-footer"><i class="fas fa-user-lock mr-2 text-info"></i> Logout</a>
+                        }
+                    </div>
+                </li>
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-light-info bg-gradient-light elevation-4">
+            <!-- Brand Logo -->
+            <a href="~/Home/Index" class="brand-link" style="text-align:center;">
+                <img src="../../assets/img/iconOnly.png" alt="" style="height:55px;">
+                @*<h2 class="brand-text text-danger">Inventory Soft.</h2>*@
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <!-- Add icons to the links using the .nav-icon class
+                    with font-awesome or any other icon font library -->
+                        <li class="nav-item">
+                            <a id="Dashboard" href="~/Inventory/Index" class="nav-link">
+                                <i class="nav-icon fas fa-home text-info"></i>
+                                <p>
+                                    Dashboard
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="Orders" href="~/Inventory/Orders" class="nav-link">
+                                <i class="nav-icon fas fa-shopping-cart text-info"></i>
+                                <p>
+                                    Orders
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="Customers" href="~/Inventory/Customers" class="nav-link">
+                                <i class="nav-icon fas fa-user-friends text-info"></i>
+                                <p>
+                                    Customers
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="Stock" href="~/Inventory/Stock" class="nav-link">
+                                <i class="nav-icon fas fa-truck text-info"></i>
+                                <p>
+                                    Stock
+                                </p>
+                            </a>
+                        </li>
+                        <li id="menu-open" class="nav-item has-treeview">
+                            <a id="main-users" href="#" class="nav-link">
+                                <i class="nav-icon fas fa-users text-info"></i>
+                                <p>
+                                    Organisation
+                                    <i class="right fas fa-angle-left  text-info"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a id="Users" href="~/Inventory/User" class="nav-link">
+                                        <i class="fa fa-circle text-info nav-icon"></i>
+                                        <p>Manage</p>
+                                    </a>
+                                </li>
+                                @*<li class="nav-item">
+                                    <a id="Inbox" href="~/Inventory/Inbox" class="nav-link">
+                                        <i class="fa fa-circle text-info nav-icon"></i>
+                                        <p>Inbox</p>
+                                    </a>
+                                </li>*@
+                            </ul>
+                        </li>
+                        <li hidden id="viewbag-title">
+                            <p>@ViewBag.title</p>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+
+        </aside>
+
+
+        @RenderBody()
+
+        <aside class="control-sidebar control-sidebar-dark bg-gradient-dark">
+            <!-- Control sidebar content goes here -->
+            <div class="p-3">
+                <h5>Title</h5>
+                <p>Sidebar content</p>
+            </div>
+        </aside>
+        <a class="btn btn-info back-to-top" id="back-to-top" role="button" aria-label="Scroll to top" href="#">
+            <i class="fas fa-comments"></i>
+        </a>
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <!-- To the right -->
+            <div class="float-right d-none d-sm-inline">
+            </div>
+            <!-- Default to the left -->
+            <strong>Copyright &copy; @DateTime.Now.Year <a href="#"><img src="../../assets/img/iconOnly.png" alt="" style="height:30px;"></a></strong> All rights reserved.
+        </footer>
+
+        <!-- REQUIRED SCRIPTS -->
+        <!-- jQuery -->
+        <script src="../../plugins/jquery/jquery.min.js"></script>
+        <!-- ChartJS -->
+        <script src="../../plugins/chart.js/Chart.min.js"></script>
+        <!-- Bootstrap 4 -->
+        <script src="../../plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <!-- DataTables -->
+        <script src="../../plugins/datatables/jquery.dataTables.min.js"></script>
+        <script src="../../plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+        <script src="../../plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+        <script src="../../plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+        <!-- Toastr -->
+        <script src="../../plugins/toastr/toastr.min.js"></script>
+        <!-- pace-progress -->
+        <script src="../../plugins/pace-progress/pace.min.js"></script>
+        <!-- AdminLTE App -->
+        <script src="../../dist/js/adminlte.min.js"></script>
+        <script src="~/Scripts/knockout-3.5.1.js"></script>
+
+        <!-- Handle active tab and other layout js stuff -->
+        <script>
+            var tabActive = $("#viewbag-title").text();
+            $("#" + tabActive.trim()).addClass("active");
+            if (tabActive.trim() != "Users" && tabActive.trim() != "Inbox") {
+                $("#" + tabActive.trim() + " .nav-icon").addClass("text-white");
+            }
+            if (tabActive.trim() == "Users" || tabActive.trim() == "Inbox") {
+                $("#main-users").addClass("active");
+                $("#main-users .nav-icon").addClass("text-white");
+                $("#menu-open").addClass("menu-open");
+            }
+        </script>
+
+        <script src="~/Scripts/Inventory/users.js"></script>
+        <script src="~/Scripts/Inventory/products.js"></script>
+        <script src="~/Scripts/Inventory/customers.js"></script>
+        <script src="~/Scripts/Inventory/orders.js"></script>
+        <script src="~/Scripts/Inventory/inbox.js"></script>
+        @*<script src="~/Scripts/Inventory/app.orders.js"></script>*@
+        <script src="~/Scripts/Inventory/app.inbox.js"></script>
+        <script src="~/creativetim/js/core/popper.min.js"></script>
+        <script src="~/creativetim/js/core/bootstrap-material-design.min.js"></script>
+        <script src="~/creativetim/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+        <script src="~/creativetim/js/material-dashboard.js"></script>
+        <script src="~/Backload/Client/blueimp/fileupload/js/vendor/jquery.ui.widget.js"></script>
+        <script src="~/Backload/Client/blueimp/fileupload/js/jquery.iframe-transport.js"></script>
+        <script src="~/Backload/Client/blueimp/fileupload/js/jquery.fileupload.js"></script>
+    </div>
+</body>
+</html>

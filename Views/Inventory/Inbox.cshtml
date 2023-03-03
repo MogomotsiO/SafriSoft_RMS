@@ -1,0 +1,178 @@
+﻿@using System.Configuration;
+@using System.Data.SqlClient;
+@{
+
+    var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["IdentityDbContext"].ToString());
+    conn.Open();
+    var cmd = conn.CreateCommand();
+    cmd.CommandText = string.Format("SELECT [Id],[Email] from [{0}].[dbo].[AspNetUsers]", conn.Database);
+
+}
+@{
+    ViewBag.Title = "Inbox";
+}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3">
+                    @*<div class="small-box bg-white border-left border-info safri-input-style">
+                        <div class="inner">
+                            <h3>Inbox:</h3>
+                            <p>Home / Users / Inbox</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-comments text-dark"></i>
+                        </div>
+                    </div>*@
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+
+                <!-- /.col -->
+                <div class="col-md-3">
+                    <div class="card card-white cardutline direct-chat direct-chat-info">
+                        <div class="card-header card-header-info">
+                            <h3 class="card-title text-white">Direct Chat</h3>
+
+                            <div class="card-tools">
+                                <button class="btn btn-tool" type="button" data-card-widget="collapse">
+                                    <i class="fas fa-minus text-white"></i>
+                                </button>
+                                <button title="Contacts" class="btn btn-tool" type="button" data-widget="chat-pane-toggle" data-toggle="tooltip">
+                                    <i class="fas fa-comments text-white"></i>
+                                </button>
+                                <button class="btn btn-tool" type="button" data-card-widget="remove">
+                                    <i class="fas fa-times text-white"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <!-- Conversations are loaded here -->
+                            <div class="direct-chat-messages safri-bg-image" data-bind="foreach: Chats">
+                                <!-- Message. Default to the left -->
+                                <!--  -->
+                                <div data-bind="if: mainUser">
+                                    <div class="direct-chat-msg" data-bind="class: UserChatPos">
+                                        <div class="direct-chat-infos clearfix">
+                                            <span class="direct-chat-name float-left safri-text-style" data-bind="text: Name"></span>
+                                            <span class="direct-chat-name float-right safri-text-style" data-bind="text: DateCreated"></span>
+                                        </div>
+                                        <!-- /.direct-chat-infos -->
+                                        <img class="direct-chat-img" alt="Message User Image" src="../dist/img/new.png">
+                                        <!-- /.direct-chat-img -->
+                                        <div class="direct-chat-text" data-bind="text: Body">
+
+                                        </div>
+                                        <!-- /.direct-chat-text -->
+                                    </div>
+                                </div>
+                                <!-- Message to the right -->
+
+                            </div>
+                            <!--/.direct-chat-messages-->
+                            <!-- Contacts are loaded here -->
+                            <div class="direct-chat-contacts bg-dark">
+                                <ul class="contacts-list">
+                                    <li class="" style="">
+                                        <a id="support-01" href="#" onclick="GetChats(this.id)">
+                                            <img class="contacts-list-img" src="../../assets/img/iconOnly.png">
+
+                                            <div class="contacts-list-info">
+                                                <span class="safri-text-style">
+                                                    Support
+                                                    @*<small class="contacts-list-date float-right"><i class="fas fa-circle text-success nav-icon"></i></small>*@
+                                                </span>
+                                                <span class="contacts-list-msg">Hey there! How can we help you?</span>
+                                            </div>
+                                            <!-- /.contacts-list-info -->
+                                        </a>
+                                    </li>
+                                    @using (var reader = cmd.ExecuteReader())
+                                    {
+                                        while (reader.Read())
+                                        {
+                                            <li style="">
+                                                <a id="@(reader.GetString(0))" href="#" data-widget="chat-pane-toggle" data-toggle="tooltip" onclick="GetChats(this.id)">
+                                                    <img class="contacts-list-img" src="../dist/img/new.png">
+
+                                                    <div class="contacts-list-info">
+                                                        <span class="contacts-list-name safri-text-style text-capitalize">
+                                                            @(reader.GetString(1))
+                                                            @*<small class="contacts-list-date float-right">2/28/2015</small>*@
+                                                        </span>
+                                                        <span class="contacts-list-msg">Available!</span>
+                                                    </div>
+                                                    <!-- /.contacts-list-info -->
+                                                </a>
+                                            </li>
+                                        }
+                                    }
+
+                                    <!-- End Contact Item -->
+                                </ul>
+                                <!-- /.contatcts-list -->
+                            </div>
+                            <!-- /.direct-chat-pane -->
+                        </div>
+                        <!-- /.card-body -->
+                        <div class="card-body bg-white">
+                            <form action="#" method="post">
+                                <div class="col-lg-12">
+                                    <div class="input-group form-group bmd-form-group">
+                                        <label class="bmd-label-floating">Type Message ...</label>
+                                        <input id="input-message" name="message" class="form-control" type="text">
+                                        <div class="input-group-append">
+                                            <div class="input-group-text  bg-white border-white">
+                                                <button class="btn btn-light send-btn" type="button" onclick="CreateMessage(this.id)"><i class="fas fa-comments text-info"></i> Send</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- /.card-footer-->
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                    <div class="card">
+                        <div class="card-header card-header-info">
+                            <h4 class="card-title"><i class="fas fa-comments"></i> Inbox</h4>
+                        </div>
+                        <div class="card-body">
+                            <table id="inbox-table" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Message</th>
+                                        <th>Date Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </div>
+
+        </div>
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content -->

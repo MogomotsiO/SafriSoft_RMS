@@ -1,0 +1,74 @@
+﻿@using System.Configuration;
+@using System.Data.SqlClient;
+@{
+
+    Layout = null;
+
+    var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString());
+    conn.Open();
+    var cmd = conn.CreateCommand();
+    cmd.CommandText = string.Format("SELECT [CustomerName],[CustomerEmail],[CustomerCell],[CustomerAddress],[DateCustomerCreated],[NumberOfOrders],[Status] from [{0}].[dbo].[Customer] ORDER By Status ASC", conn.Database);
+
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+</head>
+<body>
+    <div>
+        <div class="invoice p-3 mb-3">
+            <!-- title row -->
+            <div class="row">
+                <div class="col-12">
+                    <h3 style="font-family: 'Times New Roman', Times, serif;color:#17a2b8;">
+                        Customer Report
+                    </h3>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- Table row -->
+            <div class="row">
+                <div class="col-12 table-responsive">
+                    <table class="table table-borderless">
+                        <thead style="background-color: #17a2b8;color:#fff;font-family: 'Times New Roman', Times, serif;font-size:10px;">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Cell</th>
+                                <th>Address</th>
+                                <th>Created</th>
+                                <th>Orders</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size:10px;">
+                            @using (var reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    <tr style="border-top-color:#17a2b8 !important;">
+                                        <td>@(reader.GetString(0))</td>
+                                        <td>@(reader.GetString(1))</td>
+                                        <td>@(reader.GetString(2))</td>
+                                        <td>@(reader.GetString(3))</td>
+                                        <td>@(reader.GetString(4))</td>
+                                        <td style="text-align:center;">@(reader.GetInt32(5))</td>
+                                        <td>@(reader.GetString(6))</td>
+                                    </tr>
+                                }
+                            }
+                            
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.col -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

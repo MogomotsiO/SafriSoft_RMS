@@ -1,0 +1,68 @@
+﻿.safri-input-style {
+    border-width:2px !important;   
+    border-bottom:none;
+    border-top:none;
+    border-right:none;
+}
+
+.safri-input-style-borders {
+    height:50px;
+}
+
+.safri-text-style{
+    font-weight: normal !important;
+    display:block !important;
+}
+
+.safri-card-title{
+    text-align:right !important;
+    display:initial;
+}
+
+.safri-bg-image {
+    background: url("../img/aboutg.jpg") !important;
+}
+
+.safri-cards-height{
+}
+
+.cursor-pointer{
+    cursor:pointer;
+}
+
+.safri-file-input {
+    border-top:none !important;
+    border-left:none !important;
+    border-right:none !important;
+    border-radius:0px !important;
+}
+
+#dropzone {
+    border: 3px dashed #28a745;
+    color: #28a745;
+    padding: 50px;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+#dropzone.in {
+    width: 100%;
+    font-size: larger;
+}
+
+#dropzone.hover {
+    background: #28a745;
+    color: #fff;
+    border: 3px dashed #fff;
+}
+
+#dropzone.fade {
+    -webkit-transition: all 0.3s ease-out;
+    -moz-transition: all 0.3s ease-out;
+    -ms-transition: all 0.3s ease-out;
+    -o-transition: all 0.3s ease-out;
+    transition: all 0.3s ease-out;
+    opacity: 1;
+}
