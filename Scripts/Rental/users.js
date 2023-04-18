@@ -4,15 +4,11 @@
     "info": true,
     lengthMenu: [[7, 15, 30, -1], [7, 15, 30, "All"]],
     ajax: {
-        url: '/api/Inventory/GetUserData/',
+        url: '/api/Rental/GetUserData/',
         method: 'GET',
         "dataSrc": ""
     },
     'columns': [
-        {
-            'data': 'Id',
-            'searchable': true
-        },
         {
             'data': 'Username',
             'searchable': true
@@ -24,17 +20,6 @@
         {
             'data': 'UserRole',
             'searchable': true
-        },
-        {
-            'data': 'NumberOfOrders',
-            'searchable': true
-        },
-        {
-            'data': 'RandValueSold',
-            'searchable': true,
-            'render': function (data, type, full, meta) {
-                return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data);
-            }
         },
         {
             'data': 'Id',
@@ -53,7 +38,7 @@
 var organisationValue = $('#organisation-value').text();
 $('#CreateUser').on('click', function () {
     $('#creat-user-modal').modal('show');
-    $('#user-role').val('Captain');
+    $('#user-role').val('OrganisationUser');
     $('#organisation').val(organisationValue);
     $('#password').val(organisationValue + '&1');
 });
@@ -80,7 +65,7 @@ $('#final-create').on('click', function () {
         };
 
         $.ajax({
-            url: '/api/Inventory/UserCreate',
+            url: '/api/Rental/UserCreate',
             method: 'POST',
             dataType: 'json',
             data: user,
@@ -114,27 +99,27 @@ function editOrganisation() {
     $('#img-filename').hide();
     //$('#logo').hide();
     $.ajax({
-        url: '/api/Inventory/GetOrganisationDetails',
+        url: '/api/Rental/GetOrganisationDetails',
         method: 'GET',
         dataType: 'json'
     }).done(function (data) {
         $('.input-group').addClass('is-filled');
         $('#update-organisation-modal').modal('show');
-        $('#organisation-name').val(data[0].OrganisationName);
-        $('#organisation-email').val(data[0].OrganisationEmail);
-        $('#organisation-cell').val(data[0].OrganisationCell);
-        $('#organisation-street').val(data[0].OrganisationStreet);
-        $('#organisation-suburb').val(data[0].OrganisationSuburb);
-        $('#organisation-city').val(data[0].OrganisationCity);
-        $('#organisation-code').val(data[0].OrganisationCode);
-        $('#account-name').val(data[0].AccountName);
-        $('#account-no').val(data[0].AccountNo);
-        $('#bank-name').val(data[0].BankName);
-        $('#branch-name').val(data[0].BranchName);
-        $('#branch-code').val(data[0].BranchCode);
-        $('#clients-reference').val(data[0].ClientReference);
-        $('#vat-number').val(data[0].VATNumber);
-        $('#logo').attr('src', data[0].OrganisationLogo);
+        $('#organisation-name').val(data.OrganisationName);
+        $('#organisation-email').val(data.OrganisationEmail);
+        $('#organisation-cell').val(data.OrganisationCell);
+        $('#organisation-street').val(data.OrganisationStreet);
+        $('#organisation-suburb').val(data.OrganisationSuburb);
+        $('#organisation-city').val(data.OrganisationCity);
+        $('#organisation-code').val(data.OrganisationCode);
+        $('#account-name').val(data.AccountName);
+        $('#account-no').val(data.AccountNo);
+        $('#bank-name').val(data.BankName);
+        $('#branch-name').val(data.BranchName);
+        $('#branch-code').val(data.BranchCode);
+        $('#clients-reference').val(data.ClientReference);
+        $('#vat-number').val(data.VATNumber);
+        $('#logo').attr('src', data.OrganisationLogo);
     });
 
 }
@@ -178,7 +163,7 @@ function finalUpdateOrganisation() {
     }
     
     $.ajax({
-        url: '/api/Inventory/SaveOrganisationDetails',
+        url: '/api/Rental/SaveOrganisationDetails',
         method: 'POST',
         dataType: 'json',
         data: organisation,
@@ -224,7 +209,7 @@ function userLock(id) {
     };
 
     $.ajax({
-        url: '/api/Inventory/UserLock',
+        url: '/api/Rental/UserLock',
         method: 'POST',
         dataType: 'json',
         data: user,

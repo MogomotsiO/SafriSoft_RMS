@@ -55,6 +55,73 @@ namespace SafriSoftv1._3.Controllers
             return View();
         }
 
+        public ActionResult TenantStatement(int tenantId, string dateFromIn, string dateToIn, string organisationName)
+        {
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            ApplicationDbContext SafriSoftApp = new ApplicationDbContext();
+            var orgId = GetOrganisationId(organisationName);
+
+            var statementDetailsVm = new StatementDetailsViewModel();
+
+            statementDetailsVm.organisation = SafriSoftApp.Organisations.FirstOrDefault(x => x.OrganisationId == orgId);
+
+            var tenant = SafriSoft.Tenants.FirstOrDefault(x => x.Id == tenantId);
+            statementDetailsVm.tenant = tenant;
+
+            var unitId = SafriSoft.Assigned.FirstOrDefault(x => x.TenantId == tenantId).UnitId;
+            var unitDetails = SafriSoft.Units.FirstOrDefault(x => x.Id == unitId);
+            statementDetailsVm.unit = unitDetails;
+
+            var leaseStart = tenant.DateLeaseStart;
+            var dateFrom = DateTime.Parse(dateFromIn);
+            var dateTo = DateTime.Parse(dateToIn);
+            decimal? balanceTrack = 0;
+
+            if (leaseStart != dateFrom)
+            {
+                while (leaseStart < dateFrom)
+                {
+                    int year = leaseStart.Year;
+                    int month = leaseStart.Month;
+
+                    var tenantTransactions = SafriSoft.Transactions.Where(x => x.TenantId == tenant.Id && x.TransactionDate.Year == leaseStart.Year && x.TransactionDate.Month == leaseStart.Month).ToList();
+
+                    foreach (var tenantTransaction in tenantTransactions)
+                    {
+                        balanceTrack = tenantTransaction.TransactionCode != 15 ? balanceTrack + tenantTransaction.TransactionAmount : balanceTrack - tenantTransaction.TransactionAmount;
+                    }
+
+                    leaseStart = leaseStart.AddMonths(1);
+                }
+            }
+
+            statementDetailsVm.BalanceBF = balanceTrack;
+
+            var transactions = SafriSoft.Transactions.Where(x => x.TenantId == tenant.Id && x.TransactionDate.Year == dateFrom.Year && x.TransactionDate.Month == dateFrom.Month).ToList();
+
+            if (transactions.Count > 0)
+            {
+
+                foreach (var transaction in transactions)
+                {
+                    statementDetailsVm.transactions.Add(transaction);
+                    balanceTrack = transaction.TransactionCode != 15 ? balanceTrack + transaction.TransactionAmount : balanceTrack - transaction.TransactionAmount;
+                }
+            }
+
+            statementDetailsVm.Balance = balanceTrack;
+
+            return View(statementDetailsVm);
+        }
+
+        public ActionResult TenantStatementPDF(int TenantId, string DateFrom, string DateTo, string OrgName)
+        {
+            return new ActionAsPdf("TenantStatement", new { tenantId = TenantId, dateFromIn = DateFrom, dateToIn = DateTo, organisationName = OrgName })
+            {
+                FileName = Server.MapPath("~/Content/TenantStatement.pdf")
+            };
+        }
+
         // GET: PayNow
         public ActionResult PayNow(string TransactionFor, string Date)
         {
@@ -191,7 +258,7 @@ namespace SafriSoftv1._3.Controllers
             }
 
             int tenantId = int.Parse(TransactionFor);
-            var organisation = SafriSoft.Organisations.FirstOrDefault();
+            //var organisation = SafriSoft.Organisations.FirstOrDefault();
             var tenant = SafriSoft.Tenants.FirstOrDefault(x => x.Id == tenantId);
 
             var onceOffRequest = new PayFastRequestModel(passPhrase);
@@ -214,7 +281,7 @@ namespace SafriSoftv1._3.Controllers
 
             // Transaction Options
             onceOffRequest.email_confirmation = true;
-            onceOffRequest.confirmation_address = organisation.OrganisationEmail;
+            //onceOffRequest.confirmation_address = organisation.OrganisationEmail;
 
             var redirectUrl = $"{processUrl}{onceOffRequest.ToString()}";
 
@@ -323,6 +390,22 @@ namespace SafriSoftv1._3.Controllers
             }
 
             return o;
+        }
+
+        public int GetOrganisationId(string organisationName)
+        {
+            int organisationId = 0;
+
+            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["IdentityDbContext"].ToString()))
+            {
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("SELECT [OrganisationId] from [{0}].[dbo].[Organisations] where OrganisationName = '{1}'", conn.Database, organisationName);
+                organisationId = (int)cmd.ExecuteScalar();
+                conn.Close();
+            }
+
+            return organisationId;
         }
 
         public static byte[] DeCompressStream(byte[] compressedData)

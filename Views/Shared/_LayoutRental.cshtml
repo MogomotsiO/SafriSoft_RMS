@@ -2,33 +2,90 @@
 @using Microsoft.AspNet.Identity;
 @using Microsoft.AspNet.Identity.Owin;
 @using System.Linq;
+@using System.Configuration;
+@using System.Data.SqlClient;
+@using System.Globalization;
 @{
+
+    var username = "";
+    var userRole = "";
+    var organisation = "";
+    var userEmail = "";
+    var packageId = 0;
+    var organisationLogo = "";
+
+    NumberFormatInfo cZA = new CultureInfo("en-ZA", false).NumberFormat;
+    cZA.CurrencyPositivePattern = 2;
+
+    Dictionary<string, List<string>> pf = new Dictionary<string, List<string>>();
+    List<string> standardFeatures = new List<string>();
+    List<string> premiumFeatures = new List<string>();
+    decimal standardPrice = 0;
+    decimal premiumPrice = 0;
 
     string userId = IdentityExtensions.GetUserId(User.Identity);
     if (userId == "" || userId == null)
     {
         Response.Redirect("~/Account/Login");
     }
-    var username = "";
-    var userRole = "";
-    var organisation = "";
-    var userEmail = "";
-    try
+    else
     {
-        ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
-        var user = string.IsNullOrEmpty(userId) ? null : userManager.FindByIdAsync(userId).Result ?? null;
-        userEmail = user.Email;
-        var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
-        organisation = organisationClaim.Value;
-        var usernameClaim = userManager.GetClaims(userId).First(x => x.Type == "Username");
-        username = usernameClaim.Value;
-        userRole = userManager.GetRoles(userId).First();
+        try
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            var user = string.IsNullOrEmpty(userId) ? null : userManager.FindByIdAsync(userId).Result ?? null;
+            userEmail = user.Email;
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            organisation = organisationClaim.Value;
+            var usernameClaim = userManager.GetClaims(userId).First(x => x.Type == "Username");
+            username = usernameClaim.Value;
+            userRole = userManager.GetRoles(userId).First();
+
+            var identityConn = new SqlConnection(ConfigurationManager.ConnectionStrings["IdentityDbContext"].ToString());
+            identityConn.Open();
+            var identityCmd = identityConn.CreateCommand();
+            identityCmd.CommandText = string.Format("SELECT p.[Id], p.[PackageName], p.[PackagePrice], pf.[FeatureDescription] from [{0}].[dbo].[Packages] p JOIN [{0}].[dbo].[PackageFeatures] pf on pf.[PackageId] = p.[Id] WHERE p.[SoftwareId] = 2 AND p.[PackageName] <> 'Free'", identityConn.Database);
+
+            using (var identityReader = identityCmd.ExecuteReader())
+            {
+                while (identityReader.Read())
+                {
+                    if (identityReader.GetString(1) == "Standard")
+                    {
+                        standardFeatures.Add(identityReader.GetString(3));
+                        standardPrice = identityReader.GetDecimal(2);
+                    }
+                    else if (identityReader.GetString(1) == "Premium")
+                    {
+                        premiumFeatures.Add(identityReader.GetString(3));
+                        premiumPrice = identityReader.GetDecimal(2);
+                    }
+                }
+
+                identityReader.Close();
+
+            }
+
+            //Company package
+
+            var identityPackageCmd = identityConn.CreateCommand();
+            identityPackageCmd.CommandText = string.Format("SELECT os.[PackageId], o.[OrganisationLogo] from [{0}].[dbo].[Organisations] o JOIN [{0}].[dbo].[OrganisationSoftwares] os on os.[OrganisationId] = o.[OrganisationId] AND os.[SoftwareId] = 2 WHERE o.[OrganisationName] = '{1}'", identityConn.Database, organisation);
+            var identityPackageReader = identityPackageCmd.ExecuteReader();
+
+            if (identityPackageReader.Read())
+            {
+                packageId = identityPackageReader.GetInt32(0);
+                organisationLogo = identityPackageReader.GetString(1);
+            }
+
+        }
+        catch (Exception Ex)
+        {
+            //Response.Redirect("~/Account/Login");
+        }
     }
-    catch (Exception Ex)
-    {
-        Response.Redirect("~/Account/Login");
-    }
-    
+
+
 }
 <!DOCTYPE html>
 <html class="perfect-scrollbar-on">
@@ -49,11 +106,14 @@
     <link rel="stylesheet" href="../../plugins/toastr/toastr.min.css">
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    <!-- Select 2 -->
+    <link rel="stylesheet" href="../../plugins/select2/css/select2.min.css">
+    <link rel="stylesheet" href="../../plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
     <!-- DataTables -->
     <link rel="stylesheet" href="../../plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="../../plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
     <!-- Open Street Map Stylesheet-->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    @*<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />*@
     <!-- Drag & Drop file upload -->
     <link href="~/Backload/Client/blueimp/fileupload/css/jquery.fileupload.css" rel="stylesheet" />
     <link href="~/Backload/Client/blueimp/fileupload/css/jquery.fileupload-ui.css" rel="stylesheet" />
@@ -63,7 +123,8 @@
     <link href="../../assets/css/style.css" rel="stylesheet">-->
 
 </head>
-<body class="hold-transition sidebar-mini pace-success">
+<body class="hold-transition sidebar-mini pace-success sidebar-collapse">
+    <input id="packageId" hidden value="@packageId" />
     <div class="wrapper">
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand navbar-success navbar-success bg-white">
@@ -72,8 +133,19 @@
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars text-success"></i></a>
                 </li>
-                <li class="nav-item d-none d-sm-inline-block">
-                    <button class="btn btn-block btn-success" type="button" onclick="@("window.location.href='" + @Url.Action("Index", "Inventory") + "'");"><i class="nav-icon fas fa-project-diagram"></i> Inventory Management</button>
+                <li class="nav-item">
+                    @if (packageId == 6)
+                    {
+                        <button class="btn btn-outline-success"><i class="fas fa-crown"></i> SafriSoft - Free</button>
+                    }
+                    else if (packageId == 7)
+                    {
+                        <button class="btn btn-outline-warning"><i class="fas fa-crown"></i> SafriSoft - Standard</button>
+                    }
+                    else if (packageId == 8)
+                    {
+                        <button class="btn btn-outline-dark"><i class="fas fa-crown text-warning"></i> SafriSoft - Premium</button>
+                    }
                 </li>
             </ul>
             <ul class="navbar-nav ml-auto">
@@ -104,10 +176,10 @@
                 </li>*@
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#">
-                        <img class="" style="height:100%;border-radius:50%;" src="../dist/img/new.png">
+                        <img class="" style="height:100%;border-radius:50%;" src="../dist/img/avatar.png">
                     </a>
                     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        <span class="dropdown-item dropdown-header"><img class="" style="height:75px;border-radius:50%;" src="../dist/img/new.png"></span>
+                        <span class="dropdown-item dropdown-header"><img class="" style="height:75px;border-radius:50%;" src="../dist/img/avatar.png"></span>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item">
                             <i class="fas fa-user mr-2 text-success"></i> @(username)
@@ -137,9 +209,9 @@
         </nav>
         <!-- /.navbar -->
         <!-- Main Sidebar Container -->
-        <aside class="main-sidebar sidebar-light-success bg-gradient-light elevation-4">
+        <aside class="main-sidebar sidebar-light-success bg-gradient-dark elevation-4">
             <!-- Brand Logo -->
-            <a href="~/Home/Index" class="brand-link" style="text-align:center;">
+            <a href="~/Home/Index" class="brand-link" style="text-align: center; border-bottom: none;">
                 <img src="../../assets/img/iconOnly.png" alt="" style="height:55px;">
                 @*<h2 class="brand-text text-success">Inventory Soft.</h2>*@
             </a>
@@ -151,64 +223,98 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                         <!-- Add icons to the links using the .nav-icon class
-    with font-awesome or any other icon font library -->
+                    with font-awesome or any other icon font library -->
                         <li class="nav-item">
                             <a id="Dashboard" href="~/Rental/Index" class="nav-link">
-                                <i class="nav-icon fas fa-home text-success"></i>
-                                <p>
+                                <i class="nav-icon fas fa-home text-white"></i>
+                                <p class="text-white">
                                     Dashboard
                                 </p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="Tenants" href="~/Rental/Tenants" class="nav-link">
-                                <i class="nav-icon fas fa-user-friends text-success"></i>
-                                <p>
+                                <i class="nav-icon fas fa-user-friends text-white"></i>
+                                <p class="text-white">
                                     Tenants
                                 </p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="Units" href="~/Rental/Units" class="nav-link">
-                                <i class="nav-icon fa fa-building text-success"></i>
-                                <p>
+                                <i class="nav-icon fa fa-building text-white"></i>
+                                <p class="text-white">
                                     Units
                                 </p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="Statements" href="~/Rental/Statements" class="nav-link">
-                                <i class="nav-icon fas fa-file-invoice text-success"></i>
-                                <p>
-                                    Statements/Invoices
+                                <i class="nav-icon fas fa-file-invoice text-white"></i>
+                                <p class="text-white">
+                                    Statements
                                 </p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="Projections" href="~/Rental/Projections" class="nav-link">
-                                <i class="nav-icon fa fa-handshake text-success"></i>
-                                <p>
+                                <i class="nav-icon fa fa-handshake text-white"></i>
+                                <p class="text-white">
                                     Projections
                                 </p>
                             </a>
                         </li>
                         <li id="menu-open" class="nav-item has-treeview">
                             <a id="main-users" href="#" class="nav-link">
-                                <i class="nav-icon fas fa-users text-success"></i>
-                                <p>
-                                    Landlord
-                                    <i class="right fas fa-angle-left  text-success"></i>
+                                <i class="nav-icon fas fa-users text-white"></i>
+                                <p class="text-white">
+                                    Organisation
+                                    <i class="right fas fa-angle-left  text-white"></i>
                                 </p>
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
                                     <a id="RentalUsers" href="~/Rental/RentalUsers" class="nav-link">
-                                        <i class="fa fa-circle text-success nav-icon"></i>
-                                        <p>Manage</p>
+                                        <i class="far fa-circle text-white nav-icon"></i>
+                                        <p class="text-white">Manage Organisation</p>
                                     </a>
                                 </li>
                             </ul>
                         </li>
+                        <li id="menu-open" class="nav-item has-treeview">
+                            <a id="main-users" href="#" class="nav-link">
+                                <i class="nav-icon fas fa-project-diagram text-white"></i>
+                                <p class="text-white">
+                                    Other Softwares
+                                    <i class="right fas fa-angle-left  text-white"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a id="Users" href="https://ims.safrisoft.com" class="nav-link">
+                                        <i class="far fa-circle text-white nav-icon"></i>
+                                        <p class="text-white">Inventory Management</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a id="Users" href="https://tms.safrisoft.com" class="nav-link">
+                                        <i class="far fa-circle text-white nav-icon"></i>
+                                        <p class="text-white">Ticket Management</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        @if (packageId != 8)
+                        {
+                            <li class="nav-item">
+                                <a id="Stock" href="#" onclick="changePackage()" class="nav-link bg-gradient-purple text-white">
+                                    <i class="nav-icon fa fa-crown"></i>
+                                    <p class="text-white">
+                                        Try SafriSoft Premium
+                                    </p>
+                                </a>
+                            </li>
+                        }
                         <li hidden id="viewbag-title">
                             <p>@ViewBag.title</p>
                         </li>
@@ -242,6 +348,109 @@
             <strong>Copyright &copy; @DateTime.Now.Year <a href="#"><img src="../../assets/img/iconOnly.png" alt="" style="height:30px;"></a></strong> All rights reserved.
         </footer>
 
+        <div class="modal fade" id="change-package">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 id="change-package-title" class="modal-title">Upgrade Package</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="card">
+
+                                    <div class="card-header card-header-warning">
+                                        <h5 class="card-title"><i class="fa fa-star-half"></i> Standard</h5>
+                                    </div>
+                                    <!-- /.card-header -->
+                                    <div class="card-body">
+                                        <h3 class="text-center"><strong>@string.Format(cZA, "{0:C}", standardPrice)/pm</strong></h3>
+                                        <br />
+                                        @foreach (var feature in standardFeatures)
+                                        {
+                                            <p><span class="fa fa-check text-success"></span> @feature</p>
+                                        }
+                                        <br />
+                                        <div class="col-lg-12 text-center">
+                                            <button class="btn btn-warning text-white" onclick="createSafriOrder('@userEmail', '@organisation', 'Standard')"><i class="fa fa-star-half"></i> Standard</button>
+                                        </div>
+                                    </div>
+                                    <!-- /.card-body -->
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="card">
+
+                                    <div class="card-header card-header-primary">
+                                        <h5 class="card-title"><i class="fa fa-star"></i> Premium</h5>
+                                    </div>
+                                    <!-- /.card-header -->
+                                    <div class="card-body">
+                                        <h3 class="text-center"><strong>@string.Format(cZA, "{0:C}", premiumPrice)/pm</strong></h3>
+                                        <br />
+                                        @foreach (var feature in premiumFeatures)
+                                        {
+                                            <p><span class="fa fa-check text-success"></span> @feature</p>
+                                        }
+                                        <br />
+                                        <div class="col-lg-12 text-center">
+                                            <button class="btn bg-gradient-purple" onclick="createSafriOrder('@userEmail', '@organisation', 'Premium')"><i class="fa fa-star"></i> Premium</button>
+                                        </div>
+                                    </div>
+                                    <!-- /.card-body -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer justify-content-right">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+
+        <div class="modal fade" id="order-received-modal">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 id="change-package-title" class="modal-title">Order Received</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="card">
+
+                            <div class="card-header card-header-success">
+                                <h5 class="card-title"><i class="fa fa-question-circle"></i> What's next?</h5>
+                            </div>
+                            <!-- /.card-header -->
+                            <div class="card-body">
+                                <ol>
+                                    <li><p>We will send you an invoice</p></li>
+                                    <li><p>Please pay the invoice amount</p></li>
+                                    <li><p>Send us the proof of payment</p></li>
+                                    <li><p>Your new features will be unlocked ASAP</p></li>
+                                </ol>
+                            </div>
+                            <!-- /.card-body -->
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-right">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+
         <!-- REQUIRED SCRIPTS -->
         <!-- jQuery -->
         <script src="../../plugins/jquery/jquery.min.js"></script>
@@ -249,11 +458,21 @@
         <script src="../../plugins/chart.js/Chart.min.js"></script>
         <!-- Bootstrap 4 -->
         <script src="../../plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <!-- Select 2 -->
+        <script src="../../plugins/select2/js/select2.full.min.js"></script>
         <!-- DataTables -->
         <script src="../../plugins/datatables/jquery.dataTables.min.js"></script>
         <script src="../../plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
         <script src="../../plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
         <script src="../../plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+        <script src="../../plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+        <script src="../../plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+        <script src="../../plugins/jszip/jszip.min.js"></script>
+        <script src="../../plugins/pdfmake/pdfmake.min.js"></script>
+        <script src="../../plugins/pdfmake/vfs_fonts.js"></script>
+        <script src="../../plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+        <script src="../../plugins/datatables-buttons/js/buttons.print.min.js"></script>
+        <script src="../../plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
         <!-- Toastr -->
         <script src="../../plugins/toastr/toastr.min.js"></script>
         <!-- pace-progress -->
@@ -274,20 +493,60 @@
                 $("#main-users .nav-icon").addClass("text-white");
                 $("#menu-open").addClass("menu-open");
             }
+
+            function changePackage() {
+                $('#change-package').modal('show');
+            }
+
+            function createSafriOrder(userEmail, userOrganisation, package) {
+
+                var order = {
+                    'UserEmail': userEmail,
+                    'UserOrganisation': userOrganisation,
+                    'Package': package
+                };
+
+                $.ajax({
+                    url: '/api/Rental/SafriOrderRequest',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: order,
+                    contextType: "application/json",
+                    traditional: true
+                }).done(function (data) {
+                    if (data.Success) {
+                        $('#change-package').modal('hide');
+                        $('#order-received-modal').modal('show');
+                    } else {
+                        toastr.error(data.Error);
+                    }
+                });
+            }
+
+            //Initialize Select2 Elements
+            $('.select2').select2()
+
+            //Initialize Select2 Elements
+            $('.select2bs4').select2({
+                theme: 'bootstrap4',
+                border: 'resolve'
+            })
+
         </script>
 
-        <script src="~/Scripts/Inventory/users.js"></script>
-        <script src="~/Scripts/Inventory/products.js"></script>
+        <script src="~/Scripts/Rental/users.js"></script>
+        @*<script src="~/Scripts/Inventory/products.js"></script>*@
         <script src="~/Scripts/Rental/tenant.js"></script>
         <script src="~/Scripts/Rental/unit.js"></script>
         <script src="~/Scripts/Rental/projection.js"></script>
-        <script src="~/Scripts/Inventory/inbox.js"></script>
-        
-        <script src="~/Scripts/Inventory/app.inbox.js"></script>
+        <script src="~/Scripts/Rental/statement.js"></script>
+        @*<script src="~/Scripts/Inventory/inbox.js"></script>*@
+        <script src="~/Scripts/Report/reportsDataTables.js"></script>
+        @*<script src="~/Scripts/Inventory/app.inbox.js"></script>*@
         <script src="~/creativetim/js/core/popper.min.js"></script>
-        <script src="~/creativetim/js/core/bootstrap-material-design.min.js"></script>
+        @*<script src="~/creativetim/js/core/bootstrap-material-design.min.js"></script>*@
         <script src="~/creativetim/js/plugins/perfect-scrollbar.jquery.min.js"></script>
-        <script src="~/creativetim/js/material-dashboard.js"></script>
+        @*<script src="~/creativetim/js/material-dashboard.js"></script>*@
         <script src="~/Backload/Client/blueimp/fileupload/js/vendor/jquery.ui.widget.js"></script>
         <script src="~/Backload/Client/blueimp/fileupload/js/jquery.iframe-transport.js"></script>
         <script src="~/Backload/Client/blueimp/fileupload/js/jquery.fileupload.js"></script>

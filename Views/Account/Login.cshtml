@@ -10,7 +10,7 @@
     string userId = IdentityExtensions.GetUserId(User.Identity);
     if (userId != "" && userId != null)
     {
-        Response.Redirect("~/Inventory/Index", false);
+        Response.Redirect("~/Rental/Index", false);
     }
 }
 <!DOCTYPE html>
@@ -18,7 +18,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>SafriSoft | Inventory</title>
+    <title>SafriSoft | Rental</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -29,7 +29,7 @@
     <!-- icheck bootstrap -->
     <link rel="stylesheet" href="../../plugins/icheck-bootstrap/icheck-bootstrap.min.css">
     <!-- Theme style -->
-    <link href="~/creativetim/css/material-dashboard.css?v=2.1.2" rel="stylesheet" />
+    <link href="~/creativetim/css/Rental/material-dashboard.css?v=2.1.2" rel="stylesheet" />
     <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
@@ -41,12 +41,16 @@
     <link href="../../assets/css/style.css" rel="stylesheet">
 </head>
 <body id="hero" class="hold-transition login-page">
+    
     <div class="login-box">
+        <div class="callout callout-info rounded-0">
+            <h5 style="font-family: 'Century Gothic';">Rental Management Software</h5>
+        </div>
         <!-- /.login-logo -->
         <div class="card">
             <div class="card-body login-card-body justify-content-center">
-                <div class="login-logo"><a href="~/Home/Index"><img src="../../assets/img/iconOnly.png" alt="" class="logo-login"></a></div>
-                <p class="login-box-msg">Safri Inventory</p>
+                <div class="login-logo"><a href="~/Home/Index"><img src="../../assets/img/iconName.png" alt="" class="logo-login" style="height:100px; width:100px;"></a></div>
+                @*<p class="login-box-msg">Safri Inventory</p>*@
 
                 @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
                 {
@@ -55,7 +59,7 @@
                     <div class="mb-3">
                         <div class="input-group form-group bmd-form-group">
                             <label class="bmd-label-floating">Email</label>
-                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control"})
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
                                     <span><i class="fas fa-envelope text-info"></i></span>
@@ -64,20 +68,20 @@
                         </div>
                     </div>
                     @*<div class="mb-3">
-                        <div class="input-group form-group bmd-form-group">
-                            <label class="bmd-label-floating">Organisation</label>
-                            @Html.TextBoxFor(m => m.OrganisationName, new { @class = "form-control"})
-                            <div class="input-group-append">
-                                <div class="input-group-text  bg-white border-white">
-                                    <span><i class="fas fa-users text-info"></i></span>
-                                </div>
-                            </div>
+                <div class="input-group form-group bmd-form-group">
+                    <label class="bmd-label-floating">Organisation</label>
+                    @Html.TextBoxFor(m => m.OrganisationName, new { @class = "form-control"})
+                    <div class="input-group-append">
+                        <div class="input-group-text  bg-white border-white">
+                            <span><i class="fas fa-users text-info"></i></span>
                         </div>
-                    </div>*@
+                    </div>
+                </div>
+            </div>*@
                     <div class="mb-3">
                         <div class="input-group form-group bmd-form-group">
                             <label class="bmd-label-floating">Password</label>
-                            @Html.PasswordFor(m => m.Password, new { @class = "form-control"})
+                            @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
                                     <span><i class="fas fa-lock text-info"></i></span>
@@ -86,14 +90,14 @@
                         </div>
                     </div>
                     <div>
-                        <p>Not a member? <a href="#!">Register</a></p>
+                        <p>Forgot Password? <a href="~/Account/ForgotPassword">Click here</a></p>
                     </div>
                     <div class="row">
                         <div class="col-8">
                             @*<div class="icheck-primary">
-                                    @Html.CheckBoxFor(m => m.RememberMe)
-                                    @Html.LabelFor(m => m.RememberMe)
-                                </div>*@
+                        @Html.CheckBoxFor(m => m.RememberMe)
+                        @Html.LabelFor(m => m.RememberMe)
+                    </div>*@
                         </div>
                         <!-- /.col -->
                         <div class="col-12">

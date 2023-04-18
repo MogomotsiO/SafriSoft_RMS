@@ -20,4 +20,20 @@ namespace SafriSoftv1._3.Models
         public decimal OrderWorth { get; set; }
         public decimal ShippingCost { get; set; }
     }
+
+    public class OrderRequestViewModel
+    {
+        public string UserEmail { get; set; }
+        public string UserOrganisation { get; set; }
+        public string Package { get; set; }
+    }
+
+    public class EmailViewModel
+    {
+        public string OrderId { get; set; }
+        public string EmailSubject { get; set; }
+        public string EmailBody { get; set; }
+        public string EmailAddress { get; set; }
+    }
+
 }

@@ -6,13 +6,11 @@ using System.Web;
 
 namespace SafriSoftv1._3.Models.Data
 {
-    public class Assigned
+    public class UnitCharge
     {
         [Key]
         public int Id { get; set; }
-        public int TenantId { get; set; }
         public int UnitId { get; set; }
-        public int UnitRomms { get; set; }
-        public int OrganisationId { get; set; }
+        public int FeeId { get; set; }
     }
 }

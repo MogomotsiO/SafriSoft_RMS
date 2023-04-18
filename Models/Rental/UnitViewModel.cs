@@ -15,5 +15,7 @@ namespace SafriSoftv1._3.Models.Rental
         public string UnitDescription { get; set; }
         public decimal? UnitPrice { get; set; }
         public int NumberOfTenants { get; set; }
+        public int NumberOfCharges { get; set; }
+        public string TenantName { get; set; }
     }
 }

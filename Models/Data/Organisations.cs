@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Web;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SafriSoftv1._3.Models.Data
 {
@@ -26,6 +22,8 @@ namespace SafriSoftv1._3.Models.Data
         public string ClientReference { get; set; }
         public int VATNumber { get; set; }
         public string ImgLogoSource { get; set; }
+        public int PackageId { get; set; }
+        public string OrganisationProvince { get; set; }
 
     }
 }

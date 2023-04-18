@@ -20,5 +20,6 @@ namespace SafriSoftv1._3.Models.Data
         public DateTime DateLeaseStart { get; set; }
         public DateTime DateLeaseEnd { get; set; }
         public string Status { get; set; }
+        public int OrganisationId { get; set; }
     }
 }

@@ -1,0 +1,158 @@
+﻿@using System.Globalization;
+@model SafriSoftv1._3.Models.Rental.StatementDetailsViewModel
+@{
+    Layout = null;
+    NumberFormatInfo cZA = new CultureInfo("en-ZA", false).NumberFormat;
+    cZA.CurrencyPositivePattern = 2;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <link rel="stylesheet" href="../../dist/css/adminlte.min.css">
+</head>
+<body>
+    <div class="p-3 mb-3">
+        <!-- title row -->
+        <div class="row">
+            <div class="col-lg-12">
+                <h4>
+                    <img id="logo" src="@Model.organisation.OrganisationLogo" alt="" style="height:170px;" />
+                </h4>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- info row -->
+        <div class="row">
+            <div class="col-lg-12 table-responsive">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <b>Date:</b> <span id="order-date">@DateTime.Now.ToString("dd-MM-yyyy")</span><br>
+                                <b>Unit No.: </b><span id="unit-number">@Model.unit.UnitNumber</span><br>
+                                <b>VAT Number:</b> <span id="vat-number">@Model.organisation.VATNumber</span>
+                            </td>
+                            <td>
+                                From
+                                <address>
+                                    <strong><span id="organisation-name">@Model.organisation.OrganisationName</span></strong><br>
+                                    <span id="organisation-street">@Model.organisation.OrganisationStreet</span><br>
+                                    <span id="organisation-suburb">@Model.organisation.OrganisationSuburb</span>, <span id="organisation-city" @Model.organisation.OrganisationCity></span> <span id="organisation-code">@Model.organisation.OrganisationCode</span><br>
+                                    Phone: <span id="organisation-cell">@Model.organisation.OrganisationCell</span><br>
+                                    Email: <span id="organisation-email">@Model.organisation.OrganisationEmail</span>
+                                </address>
+                            </td>
+                            <td>
+                                To
+                                <address>
+                                    <strong><span id="customer-name">@Model.tenant.TenantName</span></strong><br>
+                                    <span id="customer-address">@Model.tenant.TenantAddress</span><br>
+                                    Phone: <span id="customer-cell">@Model.tenant.TenantCell</span><br>
+                                    Email: <span id="customer-email">@Model.tenant.TenantEmail</span>
+                                </address>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+        <!-- Table row -->
+        <div class="row">
+            <div class="col-12 table-responsive">
+                <table class="table table-bordered">
+                    <thead style="background-color: #28a745; color: #fff; font-family: 'Century Gothic' !important;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                Balance B/F
+                            </td>
+                            <td id="balance-bf">@(string.Format(cZA, "{0:C}", Model.BalanceBF))</td>
+                        </tr>
+                    </tbody>
+                    <tbody id="statement-transactions">
+                        @foreach (var trans in Model.transactions) { 
+                        
+                            <tr>
+                                <td>@trans.TransactionDate.ToString("dd-MM-yyyy")</td>
+                                <td>@trans.TransactionName</td>
+                                <td>@(string.Format(cZA, "{0:C}", trans.TransactionAmount))</td>
+                            </tr>
+
+                        }
+                    </tbody>
+                    <tbody>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                Amount Due
+                            </td>
+                            <td id="balance">@(string.Format(cZA, "{0:C}", Model.Balance))</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+        <div class="row">
+            <div class="col-lg-12 table-responsive">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <p class="lead">Banking Details:</p>
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <td><b>Account Name:</b></td>
+                                        <td><span id="account-name">@Model.organisation.AccountName</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Bank:</b></td>
+                                        <td><span id="bank-name">@Model.organisation.BankName</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Account Number:</b></td>
+                                        <td><span id="account-no">@Model.organisation.AccountNo</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Branch:</b></td>
+                                        <td><span id="bank-branch">@Model.organisation.BranchName</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Branch Code:</b></td>
+                                        <td><span id="branch-code">@Model.organisation.BranchCode</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Reference:</b></td>
+                                        <td><span id="client-reference">@Model.unit.UnitNumber</span></td>
+                                    </tr>
+
+                                </table>
+                            </td>
+                            <td style="padding-top:200px !important;">
+                                <p class="lead">Tax Invoice & Statement</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /.col -->
+        </div>
+    </div>
+</body>
+</html>

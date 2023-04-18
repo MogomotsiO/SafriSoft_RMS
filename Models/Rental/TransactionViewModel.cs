@@ -8,6 +8,7 @@ namespace SafriSoftv1._3.Models.Rental
     public class TransactionViewModel
     {
         public int TransactionFor { get; set; }
+        public decimal TransactionAmount { get; set; }
         public string DateTransactionRaised { get; set; }
     }
 }

@@ -1,14 +1,15 @@
-﻿using System;
-using System.Globalization;
+﻿using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.Owin;
+using Microsoft.Owin.Security;
+using SafriSoftv1._3.Models;
+using SafriSoftv1._3.Services;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin.Security;
-using SafriSoftv1._3.Models;
 
 namespace SafriSoftv1._3.Controllers
 {
@@ -22,7 +23,7 @@ namespace SafriSoftv1._3.Controllers
         {
         }
 
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
+        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
         {
             UserManager = userManager;
             SignInManager = signInManager;
@@ -34,9 +35,9 @@ namespace SafriSoftv1._3.Controllers
             {
                 return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
             }
-            private set 
-            { 
-                _signInManager = value; 
+            private set
+            {
+                _signInManager = value;
             }
         }
 
@@ -69,13 +70,21 @@ namespace SafriSoftv1._3.Controllers
         public async Task<ActionResult> Login(LoginViewModel model, string returnUrl)
         {
             var username = "";
+            ApplicationDbContext applicationDb = new ApplicationDbContext();
 
             if (!ModelState.IsValid)
             {
+                ModelState.AddModelError("", "Please sign up on safrisoft.com to use this software");
                 return View(model);
             }
 
             var userData = UserManager.FindByEmail(model.Email);
+
+            if (userData == null)
+            {
+                ModelState.AddModelError("", "Please sign up on safrisoft.com to use this software");
+                return View(model);
+            }
 
             try
             {
@@ -84,14 +93,25 @@ namespace SafriSoftv1._3.Controllers
             }
             catch (Exception Ex)
             {
-                
+
             }
 
             if (username == "Locked")
             {
-                ModelState.AddModelError("", "This email has been locked by your Organisation");
+                ModelState.AddModelError("", "This account has been locked by your Organisation");
                 return View(model);
             }
+
+            var organisationName = userData.Claims.FirstOrDefault(x => x.ClaimType == "Organisation").ClaimValue;
+            var organisationId = applicationDb.Organisations.FirstOrDefault(x => x.OrganisationName == organisationName).OrganisationId;
+            var checkSoftware = applicationDb.OrganisationSoftwares.FirstOrDefault(x => x.OrganisationId == organisationId && x.SoftwareId == 2).Granted;
+
+            if (!checkSoftware)
+            {
+                ModelState.AddModelError("", "This account does not have access to this software");
+                return View(model);
+            }
+
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, change to shouldLockout: true
             var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: true);
@@ -139,7 +159,7 @@ namespace SafriSoftv1._3.Controllers
             // If a user enters incorrect codes for a specified amount of time then the user account 
             // will be locked out for a specified amount of time. 
             // You can configure the account lockout settings in IdentityConfig
-            var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent:  model.RememberMe, rememberBrowser: model.RememberBrowser);
+            var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent: model.RememberMe, rememberBrowser: model.RememberBrowser);
             switch (result)
             {
                 case SignInStatus.Success:
@@ -228,7 +248,7 @@ namespace SafriSoftv1._3.Controllers
             if (ModelState.IsValid)
             {
                 var user = await UserManager.FindByNameAsync(model.Email);
-                if (user == null || !(await UserManager.IsEmailConfirmedAsync(user.Id)))
+                if (user == null)
                 {
                     // Don't reveal that the user does not exist or is not confirmed
                     return View("ForgotPasswordConfirmation");
@@ -236,9 +256,19 @@ namespace SafriSoftv1._3.Controllers
 
                 // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
                 // Send an email with this link
-                // string code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
-                // var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);		
-                // await UserManager.SendEmailAsync(user.Id, "Reset Password", "Please reset your password by clicking <a href=\"" + callbackUrl + "\">here</a>");
+                string code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
+                var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+                var subject = "SafriSoft - Password Reset";
+                var emailBody = $"Please reset your password by clicking <a href=\"" + callbackUrl + "\">here</a>";
+
+                var toAddress = new List<string>();
+                var toCCAddress = new List<string>();
+                toAddress.Add(user.Email);
+                var createEmail = new SafriSoftEmailService();
+                createEmail.SaveEmail(subject, emailBody, "support@safrisoft.com", toAddress.ToArray(), toCCAddress.ToArray());
+                model.ResultMessage = "Password reset email will be sent to your mailbox";
+                model.Email = "";
+                //await UserManager.SendEmailAsync(user.Id, "Reset Password", "Please reset your password by clicking <a href=\"" + callbackUrl + "\">here</a>");
                 // return RedirectToAction("ForgotPasswordConfirmation", "Account");
             }
 

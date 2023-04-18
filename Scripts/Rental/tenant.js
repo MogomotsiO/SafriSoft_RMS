@@ -10,10 +10,6 @@
     },
     'columns': [
         {
-            'data': 'Id',
-            'searchable': true
-        },
-        {
             'data': 'TenantName',
             'searchable': true,
             'render': function (data, type, full, meta) {
@@ -56,20 +52,20 @@
             'data': 'Documents',
             'searchable': true,
             'render': function (data, type, full, meta) {
-                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" name="' + full.TenantName + '" href="#" onclick="openDocumentModal(this.id, this.name)" class="btn btn-white" href="#"><i class="fa fa-eye text-success"></i></a> <a class="btn btn-white" href="#">' + data + '</a> </div> </td>';
+                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" name="' + full.TenantName + '" href="#" onclick="openDocumentModal(this.id, this.name)" class="btn btn-white" href="#"><i class="far fa-eye text-success"></i></a> <a class="btn btn-white" href="#">' + data + '</a> </div> </td>';
             }
         },
         {
             'data': 'NOK',
             'searchable': true,
             'render': function (data, type, full, meta) {
-                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" name="' + full.TenantName + '" href="#" onclick="openNokModal(this.id, this.name)" class="btn btn-white" href="#"><i class="fa fa-eye text-success"></i></a> <a class="btn btn-white" href="#">' + data + '</a> </div> </td>';
+                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" name="' + full.TenantName + '" href="#" onclick="openNokModal(this.id, this.name)" class="btn btn-white" href="#"><i class="far fa-eye text-success"></i></a> <a class="btn btn-white" href="#">' + data + '</a> </div> </td>';
             }
         },
         {
             'data': 'Id',
             'render': function (data, type, full, meta) {
-                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" onclick="editTenantDetails(this.id)"><i class="fas fa-folder-open text-success"></i></a> <a id="' + full.Id + '" class="btn btn-white" href="#" name="Tenant" onclick="changeRecordStatus(this.id,this.name)"><i class="fas fa-trash text-success"></i></a> </div> </td>'
+                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" onclick="editTenantDetails(this.id)"><i class="far fa-folder-open text-success"></i></a> <a id="' + full.Id + '" class="btn btn-white" href="#" name="Tenant" onclick="changeRecordStatus(this.id,this.name)"><i class="fas fa-trash text-success"></i></a> </div> </td>'
             }
         }
     ]
@@ -290,10 +286,6 @@ var nokDataTable = $("#tenant-nok-table").DataTable({
     },
     'columns': [
         {
-            'data': 'Id',
-            'searchable': true
-        },
-        {
             'data': 'NOKName',
             'searchable': true,
             'render': function (data, type, full, meta) {
@@ -319,7 +311,7 @@ var nokDataTable = $("#tenant-nok-table").DataTable({
         {
             'data': 'Id',
             'render': function (data, type, full, meta) {
-                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" onclick="editNOKDetails(this.id)"><i class="fas fa-folder-open text-success"></i></a> <a id="' + full.Id + '" class="btn btn-white" href="#" name="NOK" onclick="changeRecordStatus(this.id,this.name)"><i class="fas fa-trash text-success"></i></a> </div> </td>'
+                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" onclick="editNOKDetails(this.id)"><i class="far fa-folder-open text-success"></i></a> <a id="' + full.Id + '" class="btn btn-white" href="#" name="NOK" onclick="changeRecordStatus(this.id,this.name)"><i class="fas fa-trash text-success"></i></a> </div> </td>'
             }
         }
     ]
@@ -338,7 +330,10 @@ function editNOKDetails(id) {
         $('#edit-nok-name').val(data[0].NOKName);
         $('#edit-nok-email').val(data[0].NOKEmail);
         $('#edit-nok-cell').val(data[0].NOKCell);
-        $('#edit-nok-relation').val(data[0].NOKRelation);
+        $('#edit-nok-relationship').select2({
+            theme: 'bootstrap4',
+            border: 'resolve'
+        }).val(data[0].NOKRelation).trigger('change');
         $('#nok-id').val(data[0].Id);
 
     });
@@ -442,10 +437,6 @@ var documentDataTable = $("#tenant-document-table").DataTable({
     },
     'columns': [
         {
-            'data': 'Id',
-            'searchable': true
-        },
-        {
             'data': 'FileName',
             'searchable': true,
             'render': function (data, type, full, meta) {
@@ -509,4 +500,14 @@ function changeRecordStatus(id, name) {
 
     });
 
+}
+
+// Hide premium Buttons
+var packageId = $('#packageId').val();
+
+if (packageId != 7 && packageId != 8) {
+    $('#dropzone').hide();
+    $('#dropzone-upgrade').show();
+} else {
+    $('#dropzone-upgrade').hide();
 }

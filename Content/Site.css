@@ -1,40 +1,50 @@
 ﻿.safri-input-style {
-    border-width:2px !important;   
-    border-bottom:none;
-    border-top:none;
-    border-right:none;
+    border-width: 2px !important;
+    border-bottom: none;
+    border-top: none;
+    border-right: none;
 }
 
 .safri-input-style-borders {
-    height:50px;
+    height: 50px;
 }
 
-.safri-text-style{
+.safri-text-style {
     font-weight: normal !important;
-    display:block !important;
+    display: block !important;
 }
 
-.safri-card-title{
-    text-align:right !important;
-    display:initial;
+.safri-card-title {
+    text-align: right !important;
+    display: initial;
 }
 
 .safri-bg-image {
     background: url("../img/aboutg.jpg") !important;
 }
 
-.safri-cards-height{
+.safri-cards-height {
 }
 
-.cursor-pointer{
-    cursor:pointer;
+.cursor-pointer {
+    cursor: pointer;
 }
 
 .safri-file-input {
-    border-top:none !important;
-    border-left:none !important;
-    border-right:none !important;
-    border-radius:0px !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0px !important;
+}
+
+#dropzone-upgrade {
+    border: 3px dashed #605ca8;
+    color: #605ca8;
+    padding: 50px;
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    opacity: 0.4;
 }
 
 #dropzone {
@@ -47,22 +57,50 @@
     margin-top: 20px;
 }
 
-#dropzone.in {
-    width: 100%;
-    font-size: larger;
+    #dropzone.in {
+        width: 100%;
+        font-size: larger;
+    }
+
+    #dropzone.hover {
+        background: #28a745;
+        color: #fff;
+        border: 3px dashed #fff;
+    }
+
+    #dropzone.fade {
+        -webkit-transition: all 0.3s ease-out;
+        -moz-transition: all 0.3s ease-out;
+        -ms-transition: all 0.3s ease-out;
+        -o-transition: all 0.3s ease-out;
+        transition: all 0.3s ease-out;
+        opacity: 1;
+    }
+
+.btn-secondary {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    /*height:40px !important;
+    width:40px !important;*/
+    font-size: 12px !important;
 }
 
-#dropzone.hover {
-    background: #28a745;
-    color: #fff;
-    border: 3px dashed #fff;
+body {
+    font-family: 'Century Gothic' !important;
+    font-size: 13px !important;
 }
 
-#dropzone.fade {
-    -webkit-transition: all 0.3s ease-out;
-    -moz-transition: all 0.3s ease-out;
-    -ms-transition: all 0.3s ease-out;
-    -o-transition: all 0.3s ease-out;
-    transition: all 0.3s ease-out;
-    opacity: 1;
+.note-insert {
+    display: none;
+}
+
+.note-editing-area {
+    height: 300px;
+}
+
+[class^='select2'] {
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0px !important;
 }

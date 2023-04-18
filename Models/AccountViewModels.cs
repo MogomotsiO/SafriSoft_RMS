@@ -114,5 +114,6 @@ namespace SafriSoftv1._3.Models
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; }
+        public string ResultMessage { get; set; }
     }
 }

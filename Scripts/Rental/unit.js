@@ -10,10 +10,6 @@
     },
     'columns': [
         {
-            'data': 'Id',
-            'searchable': true
-        },
-        {
             'data': 'UnitNumber',
             'searchable': true,
             'render': function (data, type, full, meta) {
@@ -44,16 +40,23 @@
             }
         },
         {
+            'data': 'NumberOfCharges',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" name="' + full.UnitName + '" href="#" onclick="openAssignChargesModal(this.id, this.name)" class="btn btn-light" href="#">Add Charge <span class="text-success">(' + data + ')</span></a> </div> </td>';
+            }
+        },
+        {
             'data': 'NumberOfTenants',
             'searchable': true,
             'render': function (data, type, full, meta) {
-                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" name="' + full.UnitName + '" href="#" onclick="openAssignModal(this.id, this.name)" class="btn btn-white" href="#"><i class="fa fa-user-plus text-success"></i></a><a class="btn btn-white" href="#">' + data + '</a> </div> </td>';
+                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" name="' + full.UnitName + '" href="#" onclick="openAssignModal(this.id, this.name)" class="btn btn-light" href="#">Add Tenant <span class="text-success">(' + data + ')</span></a> </div> </td>';
             }
         },
         {
             'data': 'Id',
             'render': function (data, type, full, meta) {
-                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" onclick="editUnitDetails(this.id)"><i class="fas fa-folder-open text-success"></i></a> <a id="' + full.Id + '" class="btn btn-white" href="#" name="Unit" onclick="changeRecordStatus(this.id,this.name)"><i class="fas fa-trash text-success"></i></a> </div> </td>'
+                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" onclick="editUnitDetails(this.id)"><i class="far fa-folder-open text-success"></i></a> <a id="' + full.Id + '" class="btn btn-white" href="#" name="Unit" onclick="changeRecordStatus(this.id,this.name)"><i class="fas fa-trash text-success"></i></a> </div> </td>'
             }
         }
     ]
@@ -121,7 +124,10 @@ function editUnitDetails(id) {
         $('#edit-unit-description').val(data[0].UnitDescription);
         $('#edit-unit-rooms').val(data[0].UnitRooms);
         $('#edit-unit-price').val(data[0].UnitPrice);
-        $('#edit-unit-sharing').val(data[0].UnitSharing);
+        var select2 = $('#edit-unit-sharing').select2({
+            theme: 'bootstrap4',
+            border: 'resolve'
+        }).val(data[0].UnitSharing).trigger('change');
         $('#edit-unit-id').val(id);
 
     });
@@ -186,18 +192,6 @@ var tenantAssDataTable = $("#assign-tenant-table").DataTable({
         "dataSrc": ""
     },
     'columns': [
-        {
-            'data': 'Id',
-            'searchable': true,
-            'render': function (data, type, full, meta) {
-                if (full.Assigned == "True") {
-                    return '<td><div class="text-success">' + data + '</div></td>';
-                } else {
-                    return '<td><div class="">' + data + '</div></td>';
-                }
-
-            }
-        },
         {
             'data': 'TenantName',
             'searchable': true,
@@ -318,6 +312,331 @@ function removeTenantUnit(tenantId, unitId) {
         } else {
             console.log(data);
             toastr.error('An error occured while trying to remove unit from tenant contact administrator! ' + data.Error);
+        }
+
+    });
+}
+
+$('#CreateCharge').on('click', function () {
+    $('#create-charge').modal('show');
+});
+
+var chargesDataTable = $("#manage-charge-table").DataTable({
+    "responsive": true,
+    "autoWidth": false,
+    "success": true,
+    lengthMenu: [[10, 20, 30, -1], [10, 20, 30, "All"]],
+    ajax: {
+        url: '/api/Rental/GetCharges/',
+        method: 'GET',
+        "dataSrc": ""
+    },
+    'columns': [
+        {
+            'data': 'Code',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                return '<td id="' + data + '" >' + data + '</td>';
+            }
+        },
+        {
+            'data': 'Name',
+            'searchable': true
+        },
+        {
+            'data': 'Amount',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                return '<td class="text-right py-0 align-middle">' + new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data) + '</td>';
+            }
+        },
+        {
+            'data': 'Type',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                if (data == 1) {
+                    return '<td>Once-off</td>';
+                } else {
+                    return '<td>Monthly</td>';
+                }
+            }
+        },
+        {
+            'data': 'Effective',
+            'searchable': true
+        },
+        {
+            'data': 'Id',
+            'render': function (data, type, full, meta) {
+                return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" onclick="editCharge(' + full.Id + ',' + full.Code + ',\'' + full.Name + '\',\'' + full.Amount + '\',' + full.Type + ',\'' + full.Effective + '\')"><i class="far fa-folder-open text-success"></i></a> <a id="' + full.Id + '" class="btn btn-white" href="#" name="Unit" onclick="removeCharge(' + full.Id + ',' + full.Code + ',\'' + full.Name + '\',\'' + full.Amount + '\',' + full.Type + ',\'' + full.Effective + '\')"><i class="fas fa-trash text-success"></i></a> </div> </td>'
+            }
+        }
+    ]
+});
+
+function editCharge(id, code, name, amount, type, effective) {
+    var charge = { id: id, code: code, name: name, amount: amount, type: type, effective: effective };
+    $('#charge-btn').text('Edit');
+    $('#charge-title').text('Edit');
+    $('#charge-id').val(id);
+    $('#charge-code').val(code);
+    $('#charge-name').val(name);
+    var select2 = $('#charge-type').select2({
+        theme: 'bootstrap4',
+        border: 'resolve'
+    }).val(type).trigger('change');
+    $('#charge-amount').val(parseFloat(amount));
+    $('#charge-date').val(effective);
+}
+
+
+function removeCharge(id, code, name, amount, type, effective) {
+    var charge = { id: id, code: code, name: name, amount: amount, type: type, effective: effective };
+
+    $.ajax({
+        url: '/api/Rental/RemoveCharge',
+        method: 'POST',
+        dataType: 'json',
+        data: charge,
+        contextType: "application/json",
+        traditional: true
+    }).done(function (data) {
+        if (data.success) {
+            console.log(data);
+            toastr.success(data.message);
+            chargesDataTable.ajax.reload();
+            resetChargeFields();
+        } else {
+            console.log(data);
+            toastr.error(data.message);
+        }
+
+    });
+}
+
+$('#CreateChargeFinal').on('click', function () {
+    var chargeId = $('#charge-id').val();
+    var chargeCode = $('#charge-code').val();
+    var chargeName = $('#charge-name').val();
+    var chargeType = $('#charge-type').val();
+    var chargeAmount = $('#charge-amount').val();
+    var chargeDate = $('#charge-date').val();
+
+    if (chargeCode == 0) {
+        toastr.error("Charge code cannot be empty");
+        return;
+    }
+
+    if (chargeName == "") {
+        toastr.error("Charge name cannot be empty");
+        return;
+    }
+
+    if (chargeType == 0) {
+        toastr.error("Please select a charge type");
+        return;
+    }
+
+    if (chargeAmount == 0) {
+        toastr.error("Charge amount cannot be empty");
+        return;
+    }
+
+    if (chargeDate == "") {
+        toastr.error("Please select a date effective");
+        return;
+    }
+
+    var charge = {
+        Id: chargeId,
+        Code: chargeCode,
+        Name: chargeName,
+        Amount: chargeAmount,
+        Type: chargeType,
+        Effective: chargeDate
+    }
+
+    $.ajax({
+        url: '/api/Rental/SaveCharge',
+        method: 'POST',
+        dataType: 'json',
+        data: charge,
+        contextType: "application/json",
+        traditional: true
+    }).done(function (data) {
+        if (data.success) {
+            console.log(data);
+            toastr.success(data.message);
+            chargesDataTable.ajax.reload();
+            resetChargeFields();
+        } else {
+            console.log(data);
+            toastr.error(data.message);
+        }
+
+    });
+
+});
+
+$('#ResetCharge').on('click', function () {
+    resetChargeFields();
+});
+
+function resetChargeFields(){
+    $('#charge-id').val("");
+    $('#charge-code').val("");
+    $('#charge-name').val("");
+    var select2 = $('#charge-type').select2({
+        theme: 'bootstrap4',
+        border: 'resolve'
+    }).val(0).trigger('change');
+    $('#charge-amount').val("");
+    $('#charge-date').val("");
+    $('#charge-btn').text('Create');
+    $('#charge-title').text('Create');
+}
+
+function openAssignChargesModal(id, name) {
+    $('#unit-charge-id').val(id);
+    $('#add-charge').modal('show');
+    addChargesDataTable.ajax.url('/api/Rental/GetUnitCharges/' + id).load();
+}
+
+var addChargesDataTable = $("#add-charge-table").DataTable({
+    "responsive": true,
+    "autoWidth": false,
+    "success": true,
+    lengthMenu: [[10, 20, 30, -1], [10, 20, 30, "All"]],
+    ajax: {
+        url: '/api/Rental/GetUnitCharges/' + 1,
+        method: 'GET',
+        "dataSrc": ""
+    },
+    'columns': [
+        {
+            'data': 'Code',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                if (full.UnitAssigned == true) {
+                    return '<td class="text-success" id="' + data + '" ><div class="text-success">' + data + '</div></td>';
+                } else {
+                    return '<td id="' + data + '" >' + data + '</td>';
+                }
+
+            }
+        },
+        {
+            'data': 'Name',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                if (full.UnitAssigned == true) {
+                    return '<td class="text-success" id="' + data + '" ><div class="text-success">' + data + '</div></td>';
+                } else {
+                    return '<td id="' + data + '" >' + data + '</td>';
+                }
+
+            }
+        },
+        {
+            'data': 'Amount',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                if (full.UnitAssigned == true) {
+                    return '<td class="text-right py-0 align-middle text-success"><div class="text-success">' + new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data) + '</div></td>';
+                } else {
+                    return '<td class="text-right py-0 align-middle">' + new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(data) + '</td>';
+                }
+
+            }
+        },
+        {
+            'data': 'Type',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                if (data == 1) {
+                    if (full.UnitAssigned == true) {
+                        return '<td class="text-success"><div class="text-success">Once-off</div></td>';
+                    } else {
+                        return '<td>Once-off</td>';
+                    }
+
+                } else {
+                    if (full.UnitAssigned == true) {
+                        return '<td class="text-success"><div class="text-success">Monthly</div></td>';
+                    } else {
+                        return '<td>Monthly</td>';
+                    }
+                }
+            }
+        },
+        {
+            'data': 'Effective',
+            'searchable': true,
+            'render': function (data, type, full, meta) {
+                if (full.UnitAssigned == true) {
+                    return '<td class="text-success" id="' + data + '" ><div class="text-success">' + data + '</div></td>';
+                } else {
+                    return '<td id="' + data + '" >' + data + '</td>';
+                }
+
+            }
+        },
+        {
+            'data': 'Id',
+            'render': function (data, type, full, meta) {
+                if (full.UnitAssigned == false) {
+                    return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" onclick="addUnitCharge(' + full.Id + ',' + full.Code + ',\'' + full.Name + '\',\'' + full.Amount + '\',' + full.Type + ',\'' + full.Effective + '\')"><i class="fa fa-plus text-dark"></i></a> <a id="' + full.Id + '" class="btn btn-white" href="#" name="Unit" onclick="removeUnitCharge(' + full.Id + ',' + full.Code + ',\'' + full.Name + '\',\'' + full.Amount + '\',' + full.Type + ',\'' + full.Effective + '\')"><i class="fas fa-remove text-success"></i></a> </div> </td>'
+                } else {
+                    return '<td class="text-right py-0 align-middle"> <div class="btn-group btn-group-sm"> <a id="' + full.Id + '" class="btn btn-white" href="#" name="Unit" onclick="removeUnitCharge(' + full.Id + ',' + full.Code + ',\'' + full.Name + '\',\'' + full.Amount + '\',' + full.Type + ',\'' + full.Effective + '\',' + full.UnitChargeId + ')"><i class="fa fa-times text-success"></i></a> </div> </td>'
+                }
+
+            }
+        }
+    ]
+});
+
+function addUnitCharge(id, code, name, amount, type, effective) {
+    var charge = { id: id, code: code, name: name, amount: amount, type: type, effective: effective, unitId: $('#unit-charge-id').val() };
+    $.ajax({
+        url: '/api/Rental/AddUnitCharge',
+        method: 'POST',
+        dataType: 'json',
+        data: charge,
+        contextType: "application/json",
+        traditional: true
+    }).done(function (data) {
+        if (data.success) {
+            console.log(data);
+            toastr.success(data.message);
+            addChargesDataTable.ajax.reload();
+            unitDataTable.ajax.reload();
+            resetChargeFields();
+        } else {
+            console.log(data);
+            toastr.error(data.message);
+        }
+
+    });
+}
+
+function removeUnitCharge(id, code, name, amount, type, effective, unitChargeId) {
+    var charge = { id: id, code: code, name: name, amount: amount, type: type, effective: effective, unitId: $('#unit-charge-id').val(), unitChargeId: unitChargeId };
+    $.ajax({
+        url: '/api/Rental/RemoveUnitCharge',
+        method: 'POST',
+        dataType: 'json',
+        data: charge,
+        contextType: "application/json",
+        traditional: true
+    }).done(function (data) {
+        if (data.success) {
+            console.log(data);
+            toastr.success(data.message);
+            addChargesDataTable.ajax.reload();
+            unitDataTable.ajax.reload();
+        } else {
+            console.log(data);
+            toastr.error(data.message);
         }
 
     });

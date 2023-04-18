@@ -4,9 +4,11 @@ using Newtonsoft.Json.Linq;
 using SafriSoftv1._3.Models;
 using SafriSoftv1._3.Models.Data;
 using SafriSoftv1._3.Models.Rental;
+using SafriSoftv1._3.Services;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Entity;
 using System.Data.SqlClient;
 using System.IO;
 using System.IO.Compression;
@@ -14,6 +16,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
@@ -26,6 +30,13 @@ namespace SafriSoftv1._3.Controllers.API
         [HttpGet, Route("Home")]
         public IHttpActionResult Home()
         {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+
             var tenantCount = 0;
             var totalUnits = 0;
             var unitsNotSharing = 0;
@@ -44,7 +55,7 @@ namespace SafriSoftv1._3.Controllers.API
                 {
                     conn.Open();
                     var customerCountCmd = conn.CreateCommand();
-                    customerCountCmd.CommandText = string.Format("SELECT count([Id]) from [{0}].[dbo].[Tenant]", conn.Database);
+                    customerCountCmd.CommandText = string.Format("SELECT count([Id]) from [{0}].[dbo].[Tenants] WHERE OrganisationId = '{1}'", conn.Database, orgId);
                     try
                     {
                         tenantCount = (Int32)customerCountCmd.ExecuteScalar();
@@ -55,7 +66,7 @@ namespace SafriSoftv1._3.Controllers.API
                     }
 
                     var totalUnitsCmd = conn.CreateCommand();
-                    totalUnitsCmd.CommandText = string.Format("SELECT count([Id]) from [{0}].[dbo].[Unit]", conn.Database);
+                    totalUnitsCmd.CommandText = string.Format("SELECT count([Id]) from [{0}].[dbo].[Units] WHERE OrganisationId = '{1}'", conn.Database, orgId);
                     try
                     {
                         totalUnits = (Int32)totalUnitsCmd.ExecuteScalar();
@@ -67,7 +78,7 @@ namespace SafriSoftv1._3.Controllers.API
 
                     // Sum up all the units that are not sharing
                     var unitsNotSharingCmd = conn.CreateCommand();
-                    unitsNotSharingCmd.CommandText = string.Format("SELECT count([Id]) from [{0}].[dbo].[Unit] where Sharing = '{1}'", conn.Database, "No");
+                    unitsNotSharingCmd.CommandText = string.Format("SELECT count([Id]) from [{0}].[dbo].[Units] where OrganisationId = '{2}' AND Sharing = '{1}'", conn.Database, "No", orgId);
                     try
                     {
                         unitsNotSharing = (Int32)unitsNotSharingCmd.ExecuteScalar();
@@ -79,7 +90,7 @@ namespace SafriSoftv1._3.Controllers.API
 
                     // Sum up all the units that are sharing
                     var unitsSharingCmd = conn.CreateCommand();
-                    unitsSharingCmd.CommandText = string.Format("SELECT sum([UnitRooms]) from [{0}].[dbo].[Unit] where Sharing = '{1}'", conn.Database, "Yes");
+                    unitsSharingCmd.CommandText = string.Format("SELECT sum([UnitRooms]) from [{0}].[dbo].[Units] where OrganisationId = '{2}' AND Sharing = '{1}'", conn.Database, "Yes", orgId);
                     try
                     {
                         unitsSharing = (Int32)unitsSharingCmd.ExecuteScalar();
@@ -89,10 +100,10 @@ namespace SafriSoftv1._3.Controllers.API
                         unitsSharing = 0;
                     }
 
-                    unitsAvailable = unitsNotSharing + unitsSharing;
+                    //unitsAvailable = totalUnits;
 
                     var unitsOccupiedCmd = conn.CreateCommand();
-                    unitsOccupiedCmd.CommandText = string.Format("SELECT count([Id]) from [{0}].[dbo].[Assigned]", conn.Database);
+                    unitsOccupiedCmd.CommandText = string.Format("SELECT count(DISTINCT a.[UnitId]) from [{0}].[dbo].[Assigneds] a JOIN [{0}].[dbo].[Units] u on u.Id = a.UnitId ", conn.Database);
                     try
                     {
                         unitsOccupied = (Int32)unitsOccupiedCmd.ExecuteScalar();
@@ -102,10 +113,10 @@ namespace SafriSoftv1._3.Controllers.API
                         unitsOccupied = 0;
                     }
 
-                    unitsAvailable = unitsAvailable - unitsOccupied;
+                    unitsAvailable = totalUnits - unitsOccupied;
 
                     var randValueSoldCmd = conn.CreateCommand();
-                    randValueSoldCmd.CommandText = string.Format("SELECT sum([TransactionAmount]) from [{0}].[dbo].[Transaction] Where TransactionDate >= '{1}' AND TransactionDate <= '{2}' AND (TransactionCode = '{3}' OR TransactionCode = '{4}')", conn.Database, startDate, endDate, 15, 25);
+                    randValueSoldCmd.CommandText = string.Format("SELECT sum([TransactionAmount]) from [{0}].[dbo].[Transactions] Where TransactionDate >= '{1}' AND TransactionDate <= '{2}' AND TransactionCode = '{3}' AND OrganisationId = '{4}'", conn.Database, startDate, endDate, 15, orgId);
                     try
                     {
                         randValueSold = (Decimal)randValueSoldCmd.ExecuteScalar();
@@ -117,7 +128,7 @@ namespace SafriSoftv1._3.Controllers.API
 
                     
                     var expectedPaymentsCmd = conn.CreateCommand();
-                    expectedPaymentsCmd.CommandText = string.Format("SELECT sum([TransactionAmount]) from [{0}].[dbo].[Transaction] Where TransactionDate >= '{1}' AND TransactionDate <= '{2}' AND (TransactionCode = '{3}' OR TransactionCode = '{4}')", conn.Database, startDate, endDate, 10, 20);
+                    expectedPaymentsCmd.CommandText = string.Format("SELECT sum([TransactionAmount]) from [{0}].[dbo].[Transactions] Where TransactionDate >= '{1}' AND TransactionDate <= '{2}' AND TransactionCode <> '{3}' AND OrganisationId = '{4}'", conn.Database, startDate, endDate, 15, orgId);
                     try
                     {
                         expectedPayments = (Decimal)expectedPaymentsCmd.ExecuteScalar();
@@ -148,12 +159,13 @@ namespace SafriSoftv1._3.Controllers.API
             var countUsers = 0;
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
 
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString()))
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status] from [{0}].[dbo].[Tenant] where Status = '{1}'", conn.Database, "Active");
+                cmd.CommandText = string.Format("SELECT [Id],[TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status] from [{0}].[dbo].[Tenants] where OrganisationId = {2} AND Status = '{1}'", conn.Database, "Active", orgId);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -186,6 +198,20 @@ namespace SafriSoftv1._3.Controllers.API
         [HttpPost, Route("TenantCreate")]
         public async Task<IHttpActionResult> TenantCreate(TenantViewModel TenantData)
         {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+
+            var result = CheckPackageAccess("Tenants", orgId);
+
+            if (result == true)
+            {
+                return Json(new { Success = false, Error = "You have exceeded the number of Tenants to add. Please upgrade Package" });
+            }
+
             var tenantName = TenantData.TenantName;
             var tenantEmail = TenantData.TenantEmail;
             var tenantAddress = TenantData.TenantAddress;
@@ -202,7 +228,7 @@ namespace SafriSoftv1._3.Controllers.API
                 {
                     conn.Open();
                     var cmd = conn.CreateCommand();
-                    cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[Tenant] ([TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status]) VALUES('{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}')", conn.Database, tenantName, tenantEmail, tenantCell, tenantAddress, tenantWorkAddress, tenantWorkCell, dateTenantCreated, dateLeaseStart, dateLeaseEnd, "Active");
+                    cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[Tenants] ([TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status],[OrganisationId]) VALUES('{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}')", conn.Database, tenantName, tenantEmail, tenantCell, tenantAddress, tenantWorkAddress, tenantWorkCell, dateTenantCreated, dateLeaseStart, dateLeaseEnd, "Active", orgId);
                     await cmd.ExecuteNonQueryAsync();
 
                 }
@@ -230,7 +256,7 @@ namespace SafriSoftv1._3.Controllers.API
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status] from [{0}].[dbo].[Tenant] where Status = '{1}' AND Id = '{2}'", conn.Database, "Active", Id);
+                cmd.CommandText = string.Format("SELECT [Id],[TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status] from [{0}].[dbo].[Tenants] where Status = '{1}' AND Id = '{2}'", conn.Database, "Active", Id);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -335,7 +361,7 @@ namespace SafriSoftv1._3.Controllers.API
                 {
                     conn.Open();
                     var cmd = conn.CreateCommand();
-                    cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[NOK] ([NOKName],[NOKEmail],[NOKCell],[NOKRelation],[DateNOKCreated],[TenantId]) VALUES('{1}','{2}','{3}','{4}','{5}','{6}')", conn.Database, nokName, nokEmail, nokCell, nokRelation, dateNOKCreated, nokTenantId);
+                    cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[NOKs] ([NOKName],[NOKEmail],[NOKCell],[NOKRelation],[DateNOKCreated],[TenantId]) VALUES('{1}','{2}','{3}','{4}','{5}','{6}')", conn.Database, nokName, nokEmail, nokCell, nokRelation, dateNOKCreated, nokTenantId);
                     await cmd.ExecuteNonQueryAsync();
 
                 }
@@ -362,7 +388,7 @@ namespace SafriSoftv1._3.Controllers.API
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[NOKName],[NOKEmail],[NOKCell],[NOKRelation],[DateNOKCreated] from [{0}].[dbo].[NOK]", conn.Database);
+                cmd.CommandText = string.Format("SELECT [Id],[NOKName],[NOKEmail],[NOKCell],[NOKRelation],[DateNOKCreated] from [{0}].[dbo].[NOKs]", conn.Database);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -399,7 +425,7 @@ namespace SafriSoftv1._3.Controllers.API
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[NOKName],[NOKEmail],[NOKCell],[NOKRelation],[DateNOKCreated] from [{0}].[dbo].[NOK] where TenantId = '{1}'", conn.Database, Id);
+                cmd.CommandText = string.Format("SELECT [Id],[NOKName],[NOKEmail],[NOKCell],[NOKRelation],[DateNOKCreated] from [{0}].[dbo].[NOKs] where TenantId = '{1}'", conn.Database, Id);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -436,7 +462,7 @@ namespace SafriSoftv1._3.Controllers.API
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[NOKName],[NOKEmail],[NOKCell],[NOKRelation],[DateNOKCreated] from [{0}].[dbo].[NOK] where Id = '{1}'", conn.Database, Id);
+                cmd.CommandText = string.Format("SELECT [Id],[NOKName],[NOKEmail],[NOKCell],[NOKRelation],[DateNOKCreated] from [{0}].[dbo].[NOKs] where Id = '{1}'", conn.Database, Id);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -548,7 +574,7 @@ namespace SafriSoftv1._3.Controllers.API
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[FileName],[DateFileCreated] from [{0}].[dbo].[Document] where TenantId = '{1}'", conn.Database, Id);
+                cmd.CommandText = string.Format("SELECT [Id],[FileName],[DateFileCreated] from [{0}].[dbo].[Documents] where TenantId = '{1}'", conn.Database, Id);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -582,7 +608,7 @@ namespace SafriSoftv1._3.Controllers.API
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[FileName],[DateFileCreated] from [{0}].[dbo].[Document]", conn.Database);
+                cmd.CommandText = string.Format("SELECT [Id],[FileName],[DateFileCreated] from [{0}].[dbo].[Documents]", conn.Database);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -611,12 +637,13 @@ namespace SafriSoftv1._3.Controllers.API
             var UnitViewModel = new List<UnitViewModel>();
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
 
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString()))
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[UnitNumber],[UnitName],[UnitRooms],[UnitDescription],[UnitPrice],[Sharing] from [{0}].[dbo].[Unit] where Status = '{1}'", conn.Database,"Active");
+                cmd.CommandText = string.Format("SELECT [Id],[UnitNumber],[UnitName],[UnitRooms],[UnitDescription],[UnitPrice],[Sharing] from [{0}].[dbo].[Units] where OrganisationId = {2} AND Status = '{1}'", conn.Database,"Active", orgId);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -631,6 +658,7 @@ namespace SafriSoftv1._3.Controllers.API
                         units.UnitPrice = reader.GetDecimal(5);
                         units.UnitSharing = reader.GetString(6);
                         units.NumberOfTenants = SafriSoft.Assigned.Count(x => x.UnitId == units.Id);
+                        units.NumberOfCharges = SafriSoft.UnitCharges.Count(x => x.UnitId == units.Id);
                         //units.DateFileCreated = reader.GetDateTime(2).ToString("dd MMMM yyyy");
                         UnitViewModel.Add(units);
                     }
@@ -645,6 +673,20 @@ namespace SafriSoftv1._3.Controllers.API
         [HttpPost, Route("UnitCreate")]
         public async Task<IHttpActionResult> UnitCreate(UnitViewModel UnitData)
         {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+
+            var result = CheckPackageAccess("Units", orgId);
+
+            if (result == true)
+            {
+                return Json(new { Success = false, Error = "You have exceeded the number of Units to add. Please upgrade Package" });
+            }
+
             var unitNumber = UnitData.UnitNumber;
             var unitName = UnitData.UnitName;
             var unitDescription = UnitData.UnitDescription;
@@ -659,7 +701,7 @@ namespace SafriSoftv1._3.Controllers.API
                 {
                     conn.Open();
                     var cmd = conn.CreateCommand();
-                    cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[Unit] ([UnitNumber],[UnitName],[UnitRooms],[UnitDescription],[UnitPrice],[Sharing],[Status]) VALUES('{1}','{2}','{3}','{4}','{5}','{6}','{7}')", conn.Database, unitNumber, unitName, unitRooms, unitDescription, unitPrice, unitsharing, "Active");
+                    cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[Units] ([UnitNumber],[UnitName],[UnitRooms],[UnitDescription],[UnitPrice],[Sharing],[Status],[OrganisationId]) VALUES('{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}')", conn.Database, unitNumber, unitName, unitRooms, unitDescription, unitPrice, unitsharing, "Active", orgId);
                     await cmd.ExecuteNonQueryAsync();
 
                 }
@@ -686,7 +728,7 @@ namespace SafriSoftv1._3.Controllers.API
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[UnitNumber],[UnitName],[UnitRooms],[UnitDescription],[UnitPrice],[Sharing] from [{0}].[dbo].[Unit] where Id = '{1}'", conn.Database, Id);
+                cmd.CommandText = string.Format("SELECT [Id],[UnitNumber],[UnitName],[UnitRooms],[UnitDescription],[UnitPrice],[Sharing] from [{0}].[dbo].[Units] where Id = '{1}'", conn.Database, Id);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -775,14 +817,14 @@ namespace SafriSoftv1._3.Controllers.API
             {
                 conn.Open();
                 var cmdTenants = conn.CreateCommand();
-                cmdTenants.CommandText = string.Format("SELECT [Id],[TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status] from [{0}].[dbo].[Tenant] where Status = '{1}'", conn.Database, "Active");
+                cmdTenants.CommandText = string.Format("SELECT [Id],[TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status] from [{0}].[dbo].[Tenants] where Status = '{1}'", conn.Database, "Active");
 
                 using (var reader = cmdTenants.ExecuteReader())
                 {
                     while (reader.Read())
                     {
                         var cmdAssigned = conn.CreateCommand();
-                        cmdAssigned.CommandText = string.Format("SELECT [Id],[TenantId],[UnitId],[UnitRomms] from [{0}].[dbo].[Assigned] where TenantId = '{1}' AND UnitId = '{2}'", conn.Database, reader.GetInt32(0), Id);
+                        cmdAssigned.CommandText = string.Format("SELECT [Id],[TenantId],[UnitId],[UnitRomms] from [{0}].[dbo].[Assigneds] where TenantId = '{1}' AND UnitId = '{2}'", conn.Database, reader.GetInt32(0), Id);
                         var readerAssigned = cmdAssigned.ExecuteReader();
 
                         var assignedTenants = new AssignedTenantViewModel();
@@ -812,6 +854,7 @@ namespace SafriSoftv1._3.Controllers.API
             var AssignedTenantViewModel = new List<AssignedTenantViewModel>();
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
             JObject o = new JObject();
 
             int numberOfTenants = SafriSoft.Assigned.Count(x => x.UnitId == AssignTenantUnitData.UnitId);
@@ -831,7 +874,7 @@ namespace SafriSoftv1._3.Controllers.API
                 return Json(o);
             }
 
-            var assignedTenant = SafriSoft.Assigned.Where(x => x.TenantId == AssignTenantUnitData.Id && x.UnitId == AssignTenantUnitData.UnitId).FirstOrDefault();
+            var assignedTenant = SafriSoft.Assigned.Where(x => x.TenantId == AssignTenantUnitData.Id && x.UnitId == AssignTenantUnitData.UnitId && x.OrganisationId == orgId).FirstOrDefault();
 
             if (assignedTenant == null)
             {
@@ -839,13 +882,13 @@ namespace SafriSoftv1._3.Controllers.API
                 {
                     conn.Open();
                     var cmdUnit = conn.CreateCommand();
-                    cmdUnit.CommandText = string.Format("SELECT [UnitRooms] from [{0}].[dbo].[Unit] where Id = {1}", conn.Database, AssignTenantUnitData.UnitId);
+                    cmdUnit.CommandText = string.Format("SELECT [UnitRooms] from [{0}].[dbo].[Units] where Id = {1}", conn.Database, AssignTenantUnitData.UnitId);
 
                     using (var reader = cmdUnit.ExecuteReader())
                     {
                         reader.Read();
                         var cmd = conn.CreateCommand();
-                        cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[Assigned] ([TenantId],[UnitId],[UnitRomms]) VALUES('{1}','{2}','{3}')", conn.Database, AssignTenantUnitData.Id, AssignTenantUnitData.UnitId, reader.GetInt32(0));
+                        cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[Assigneds] ([TenantId],[UnitId],[UnitRomms],[OrganisationId]) VALUES('{1}','{2}','{3}','{4}')", conn.Database, AssignTenantUnitData.Id, AssignTenantUnitData.UnitId, reader.GetInt32(0), orgId);
                         await cmd.ExecuteNonQueryAsync();
                         o["Found"] = false;
                     }
@@ -878,7 +921,7 @@ namespace SafriSoftv1._3.Controllers.API
                 {
                     conn.Open();
                     var cmd = conn.CreateCommand();
-                    cmd.CommandText = string.Format("DELETE from [{0}].[dbo].[Assigned] where TenantId = {1} AND UnitId = {2}", conn.Database, AssignTenantUnitData.Id, AssignTenantUnitData.UnitId);
+                    cmd.CommandText = string.Format("DELETE from [{0}].[dbo].[Assigneds] where TenantId = {1} AND UnitId = {2}", conn.Database, AssignTenantUnitData.Id, AssignTenantUnitData.UnitId);
                     cmd.ExecuteNonQuery();
                     conn.Close();
                 }
@@ -904,12 +947,13 @@ namespace SafriSoftv1._3.Controllers.API
             var ProjectionsViewModel = new List<ProjectionsViewModel>();
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
             JObject o = new JObject();
 
             var getFirstDate = SafriSoft.Tenants.OrderBy(x=>x.DateLeaseStart).Select(x => x.DateLeaseStart).FirstOrDefault();
             var getLastDate = SafriSoft.Tenants.OrderByDescending(x => x.DateLeaseEnd).Select(x => x.DateLeaseEnd).FirstOrDefault();
 
-            var transactions = SafriSoft.Transactions.ToList();
+            var transactions = SafriSoft.Transactions.Where(x => x.OrganisationId == orgId).ToList();
 
             foreach (var transaction in transactions)
             {
@@ -925,7 +969,7 @@ namespace SafriSoftv1._3.Controllers.API
             }
 
             // Lets get all assigned records
-            var assignedUnits = SafriSoft.Assigned.ToList();
+            var assignedUnits = SafriSoft.Assigned.Where(x => x.OrganisationId == orgId).ToList();
             
             foreach (var assignedUnitsData in assignedUnits)
             {
@@ -940,7 +984,9 @@ namespace SafriSoftv1._3.Controllers.API
 
                 while (leaseStart <= leaseEnd)
                 {
-                    var getTransaction = SafriSoft.Transactions.FirstOrDefault(x => x.TransactionDate == leaseStart && x.TenantId == tenantData.Id);
+                    var transDateStart = new DateTime(leaseStart.Year,leaseStart.Month, 1);
+                    var transDateEnd = new DateTime(leaseStart.Year, leaseStart.Month, DateTime.DaysInMonth(leaseStart.Year, leaseStart.Month));
+                    var getTransaction = SafriSoft.Transactions.FirstOrDefault(x => x.TransactionDate >= transDateStart && x.TransactionDate <= transDateEnd && x.TenantId == tenantData.Id);
 
                     if (getTransaction == null)
                     { 
@@ -1004,6 +1050,7 @@ namespace SafriSoftv1._3.Controllers.API
             var AssignedTenantViewModel = new List<AssignedTenantViewModel>();
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
             JObject o = new JObject();
             
             try
@@ -1018,78 +1065,68 @@ namespace SafriSoftv1._3.Controllers.API
                         var unitPrice = SafriSoft.Units.Where(x => x.Id == assignedUnitsData.UnitId).Select(x => x.UnitPrice).FirstOrDefault();
                         var numberOfTenants = SafriSoft.Assigned.Where(x => x.UnitId == assignedUnitsData.UnitId).Count();
                         var tenantData = SafriSoft.Tenants.FirstOrDefault(x => x.Id == assignedUnitsData.TenantId);
-
+                        
                         var dateTransactionRaised = DateTime.Parse(TransactionData.DateTransactionRaised);
-                        var finalDate = DateTime.Parse(dateTransactionRaised.Year + "-" + dateTransactionRaised.Month + "-" + tenantData.DateLeaseStart.Day);
+                        var finalDate = DateTime.Parse(dateTransactionRaised.Year + "-" + dateTransactionRaised.Month + "-" + dateTransactionRaised.Day);
                         var transactionFor = TransactionData.TransactionFor;
                         var transactionCode = 10;
-                        var transactionName = "Monthly - Rental";
+                        var transactionName = "Rent";
                         decimal? finalUnitPrice = unitPrice / numberOfTenants;
 
                         if (tenantData.DateLeaseStart <= finalDate && tenantData.DateLeaseEnd >= finalDate)
                         {
-                            try
+                            var transactionRentDetails = SafriSoft.Transactions.Where(x => x.TransactionCode == transactionCode && x.TenantId == tenantData.Id && x.TransactionDate.Year == dateTransactionRaised.Year && x.TransactionDate.Month == dateTransactionRaised.Month).FirstOrDefault();
+
+                            if (transactionRentDetails == null)
                             {
+                                // Raise the monthly rental amount
                                 o = RaiseTransaction(transactionCode, transactionName, finalUnitPrice, finalDate, tenantData.Id);
                             }
-                            catch (Exception Ex)
+                            else
                             {
-                                o["Success"] = false;
-                                o["Message"] = Ex.Message;
-                            }
-
-                            if (tenantData.DateLeaseStart == finalDate)
-                            {
-                                var depositTransactionCode = 20;
-                                var depositTransactionName = "Initial - Deposit";
-
-                                try
-                                {
-                                    o = RaiseTransaction(depositTransactionCode, depositTransactionName, finalUnitPrice, finalDate, tenantData.Id);
-                                }
-                                catch (Exception Ex)
-                                {
-                                    o["Success"] = false;
-                                    o["Message"] = Ex.Message;
-                                }
-                            }
-
-                            try
-                            {
-                                var deposit = tenantData.DateLeaseStart == finalDate ? true : false;
-                                var amount = finalUnitPrice;
-                                var sendDate = finalDate.Year + "/" + finalDate.Month + "/" + finalDate.Day;
-                                var tenantName = tenantData.TenantName;
-                                var payNowLink = "http://safrisoft.com/rental/paynow?TransactionFor=" + tenantData.Id + "&Date=" + sendDate;
-                                var emailBody = "Hi " + tenantName + ",<br/><br /> On behalf of your landlord please click link below to pay your rent.<br/><br />" + payNowLink;
-
-                                using (MailMessage mt = new MailMessage())
-                                {
-                                    mt.From = new MailAddress("admin@safrisoft.com");
-                                    mt.IsBodyHtml = true;
-                                    mt.Subject = "SafriSoft - Pay Now";
-                                    mt.Body = "<span><h1 style='color:#17a2b8;'>SafriSoft.</h1></span></br><div style='font-family:Courier New;'> " + emailBody + "</div></br><br /><p style='font-family:Courier New;'>Regards,</p><div style='height:2px;background-color:#17a2b8;width:40%;margin-bottom:5px;'></div><div><p style='font-family:Courier New;'>Administrator</p><p style='font-family:Courier New;'>Website: www.safrisoft.com</p><p style='font-family:Courier New;'>Email: admin@safrisoft.com</p><p style='font-family:Courier New;'>Cell: 067 272 7320</p></div><div style='height:2px;background-color:#17a2b8;width:40%;margin-bottom:5px;'></div>";
-                                    mt.To.Add(tenantData.TenantEmail);
-                                    mt.IsBodyHtml = true;
-                                    SmtpClient smtp2 = new SmtpClient();
-                                    smtp2.Host = "mail.safrisoft.com";
-                                    smtp2.EnableSsl = false;
-                                    smtp2.UseDefaultCredentials = false;
-                                    NetworkCredential networkCred2 = new NetworkCredential();
-                                    networkCred2.UserName = "admin@safrisoft.com";
-                                    networkCred2.Password = "@SafriAdmin&1";
-                                    smtp2.Credentials = networkCred2;
-                                    smtp2.Port = 25;
-                                    await smtp2.SendMailAsync(mt);
-                                }
                                 o["Success"] = true;
-                            }
-                            catch (Exception Ex)
-                            {
-                                o["Success"] = false;
-                                o["Message"] = Ex.Message;
+                                o["Message"] = "Transactions already created";
                             }
 
+                            // lets raise all the other charges
+                            var unitCharges = SafriSoft.UnitCharges.Where(x => x.UnitId == assignedUnitsData.UnitId).ToList();
+
+                            foreach(var unitCharge in unitCharges)
+                            {
+                                var chargeDetails = SafriSoft.Charges.Where(x => x.Id == unitCharge.FeeId && x.Effective <= dateTransactionRaised).FirstOrDefault();
+                                var chargeAmount = chargeDetails.Amount / numberOfTenants;
+                                if (chargeDetails != null)
+                                {
+                                    if(chargeDetails.Type == 2)
+                                    {
+                                        var transactionDetails = SafriSoft.Transactions.Where(x => x.TransactionCode == chargeDetails.Code && x.TenantId == tenantData.Id && x.TransactionDate.Year == dateTransactionRaised.Year && x.TransactionDate.Month == dateTransactionRaised.Month).FirstOrDefault();
+
+                                        if (transactionDetails == null)
+                                        {
+                                            o = RaiseTransaction(chargeDetails.Code, chargeDetails.Name, chargeAmount, finalDate, tenantData.Id);
+                                        }
+                                        else
+                                        {
+                                            o["Success"] = true;
+                                            o["Message"] = "Transactions already created";
+                                        }
+                                    }else if(chargeDetails.Type == 1)
+                                    {
+                                        var transactionDetails = SafriSoft.Transactions.Where(x => x.TransactionCode == chargeDetails.Code && x.TenantId == tenantData.Id && x.TransactionDate <= dateTransactionRaised).FirstOrDefault();
+
+                                        if (transactionDetails == null)
+                                        {
+                                            o = RaiseTransaction(chargeDetails.Code, chargeDetails.Name, chargeAmount, finalDate, tenantData.Id);
+                                        }
+                                        else
+                                        {
+                                            o["Success"] = true;
+                                            o["Message"] = "Transactions already created";
+                                        }
+                                    }
+                                    
+                                }
+                            }
                         }
 
                     }
@@ -1098,10 +1135,10 @@ namespace SafriSoftv1._3.Controllers.API
                 {
                     var tenantData = SafriSoft.Tenants.FirstOrDefault(x => x.Id == TransactionData.TransactionFor);
                     var dateTransactionRaised = DateTime.Parse(TransactionData.DateTransactionRaised);
-                    var finalDate = DateTime.Parse(dateTransactionRaised.Year + "-" + dateTransactionRaised.Month + "-" + tenantData.DateLeaseStart.Day);
+                    var finalDate = DateTime.Parse(dateTransactionRaised.Year + "-" + dateTransactionRaised.Month + "-" + dateTransactionRaised.Day);
                     var transactionFor = TransactionData.TransactionFor;
                     var transactionCode = 10;
-                    var transactionName = "Monthly - Rental";
+                    var transactionName = "Rent";
                     var assignedUnits = SafriSoft.Assigned.FirstOrDefault(x => x.TenantId == transactionFor);
                     var unitPrice = SafriSoft.Units.Where(x => x.Id == assignedUnits.UnitId).Select(x => x.UnitPrice).FirstOrDefault();
                     var numberOfTenants = SafriSoft.Assigned.Where(x => x.UnitId == assignedUnits.UnitId).Count();
@@ -1109,49 +1146,57 @@ namespace SafriSoftv1._3.Controllers.API
 
                     if (tenantData.DateLeaseStart <= finalDate && tenantData.DateLeaseEnd >= finalDate)
                     {
-                        try
+                        var transactionRentDetails = SafriSoft.Transactions.Where(x => x.TransactionCode == transactionCode && x.TenantId == tenantData.Id && x.TransactionDate.Year == dateTransactionRaised.Year && x.TransactionDate.Month == dateTransactionRaised.Month).FirstOrDefault();
+
+                        if (transactionRentDetails == null)
                         {
                             o = RaiseTransaction(transactionCode, transactionName, finalUnitPrice, finalDate, transactionFor);
-                            try
-                            {
-                                var deposit = tenantData.DateLeaseStart == finalDate ? true : false;
-                                var amount = finalUnitPrice;
-                                var sendDate = finalDate.Year + "/" + finalDate.Month + "/" + finalDate.Day;
-                                var tenantName = tenantData.TenantName;
-                                var payNowLink = "http://safrisoft.com/rental/paynow?TransactionFor=" + tenantData.Id + "&Date=" + sendDate;
-                                var emailBody = "Hi " + tenantName + ",<br/><br /> On behalf of your landlord please click link below to pay your rent.<br/><br />" + payNowLink;
-
-                                using (MailMessage mt = new MailMessage())
-                                {
-                                    mt.From = new MailAddress("admin@safrisoft.com");
-                                    mt.IsBodyHtml = true;
-                                    mt.Subject = "SafriSoft - Pay Now";
-                                    mt.Body = "<span><h1 style='color:#17a2b8;'>SafriSoft.</h1></span></br><div style='font-family:Courier New;'> " + emailBody + "</div></br><br /><p style='font-family:Courier New;'>Regards,</p><div style='height:3px;background-color:#17a2b8;width:40%;margin-bottom:5px;'></div><div><p style='font-family:Courier New;'>Administrator</p><p style='font-family:Courier New;'>Website: www.safrisoft.com</p><p style='font-family:Courier New;'>Email: admin@safrisoft.com</p><p style='font-family:Courier New;'>Cell: 067 272 7320</p></div><div style='height:3px;background-color:#17a2b8;width:40%;margin-bottom:5px;'></div>";
-                                    mt.To.Add(tenantData.TenantEmail);
-                                    mt.IsBodyHtml = true;
-                                    SmtpClient smtp2 = new SmtpClient();
-                                    smtp2.Host = "mail.safrisoft.com";
-                                    smtp2.EnableSsl = false;
-                                    smtp2.UseDefaultCredentials = false;
-                                    NetworkCredential networkCred2 = new NetworkCredential();
-                                    networkCred2.UserName = "admin@safrisoft.com";
-                                    networkCred2.Password = "@SafriAdmin&1";
-                                    smtp2.Credentials = networkCred2;
-                                    smtp2.Port = 25;
-                                    await smtp2.SendMailAsync(mt);
-                                }
-                                o["Success"] = true;
-                            }
-                            catch (Exception Ex)
-                            {
-                                o["Success"] = false;
-                                o["Message"] = Ex.Message;
-                            }
                         }
-                        catch (Exception Ex)
+                        else
                         {
-                            o["Success"] = false;
-                            o["Message"] = Ex.Message;
+                            o["Success"] = true;
+                            o["Message"] = "Transactions already created";
+                        }
+
+                        // lets raise all the other charges
+                        var unitCharges = SafriSoft.UnitCharges.Where(x => x.UnitId == assignedUnits.UnitId).ToList();
+
+                        foreach (var unitCharge in unitCharges)
+                        {
+                            var chargeDetails = SafriSoft.Charges.Where(x => x.Id == unitCharge.FeeId && x.Effective <= dateTransactionRaised).FirstOrDefault();
+                            var chargeAmount = chargeDetails.Amount / numberOfTenants;
+                            if (chargeDetails != null)
+                            {
+                                if (chargeDetails.Type == 2)
+                                {
+                                    var transactionDetails = SafriSoft.Transactions.Where(x => x.TransactionCode == chargeDetails.Code && x.TenantId == tenantData.Id && x.TransactionDate.Year == dateTransactionRaised.Year && x.TransactionDate.Month == dateTransactionRaised.Month).FirstOrDefault();
+
+                                    if (transactionDetails == null)
+                                    {
+                                        o = RaiseTransaction(chargeDetails.Code, chargeDetails.Name, chargeAmount, finalDate, tenantData.Id);
+                                    }
+                                    else
+                                    {
+                                        o["Success"] = true;
+                                        o["Message"] = "Transactions already created";
+                                    }
+                                }
+                                else if (chargeDetails.Type == 1)
+                                {
+                                    var transactionDetails = SafriSoft.Transactions.Where(x => x.TransactionCode == chargeDetails.Code && x.TenantId == tenantData.Id && x.TransactionDate <= dateTransactionRaised).FirstOrDefault();
+
+                                    if (transactionDetails == null)
+                                    {
+                                        o = RaiseTransaction(chargeDetails.Code, chargeDetails.Name, chargeAmount, finalDate, tenantData.Id);
+                                    }
+                                    else
+                                    {
+                                        o["Success"] = true;
+                                        o["Message"] = "Transactions already created";
+                                    }
+                                }
+
+                            }
                         }
                     }
                 }                
@@ -1165,6 +1210,162 @@ namespace SafriSoftv1._3.Controllers.API
             
             return Json(o);
 
+        }
+
+        [HttpPost, Route("PaymentTransactionCreate")]
+        public async Task<IHttpActionResult> PaymentTransactionCreate(TransactionViewModel TransactionData)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var AssignedTenantViewModel = new List<AssignedTenantViewModel>();
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            JObject o = new JObject();
+
+            try
+            {
+                var tenantData = SafriSoft.Tenants.FirstOrDefault(x => x.Id == TransactionData.TransactionFor);
+                var dateTransactionRaised = DateTime.Parse(TransactionData.DateTransactionRaised);
+                var finalDate = DateTime.Parse(dateTransactionRaised.Year + "-" + dateTransactionRaised.Month + "-" + dateTransactionRaised.Day);
+                var transactionFor = TransactionData.TransactionFor;
+                var transactionCode = 15;
+                var transactionName = "Tenant - Payment";
+                decimal? paymentAmount = TransactionData.TransactionAmount;
+
+                o = RaiseTransaction(transactionCode, transactionName, paymentAmount, finalDate, tenantData.Id);
+                
+            }
+            catch (Exception Ex)
+            {
+                o["Success"] = false;
+                o["Message"] = Ex.Message;
+            }
+
+            return Json(o);
+
+        }
+
+        [HttpGet, Route("GetStatements")]
+        public async Task<IHttpActionResult> GetStatements()
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var AssignedTenantViewModel = new List<AssignedTenantViewModel>();
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+
+            var statementsVm = new List<StatementsViewModel>();
+
+            var tenants = SafriSoft.Tenants.Where(x => x.OrganisationId == orgId).ToList();
+
+            foreach (var tenant in tenants)
+            {
+                var assignedUnit = SafriSoft.Assigned.FirstOrDefault(x => x.TenantId == tenant.Id);
+
+                if (assignedUnit != null)
+                {
+                    var leaseStart = tenant.DateLeaseStart;
+                    var leaseEnd = tenant.DateLeaseEnd;
+                    decimal? balanceTrack = 0;
+
+                    while (leaseStart <= leaseEnd)
+                    {
+                        int year = leaseStart.Year;
+                        int month = leaseStart.Month;
+
+                        var transactions = SafriSoft.Transactions.Where(x => x.TenantId == tenant.Id && x.TransactionDate.Year == leaseStart.Year && x.TransactionDate.Month == leaseStart.Month).ToList();
+
+                        if(transactions.Count > 0)
+                        {
+                            var statementVm = new StatementsViewModel();
+                            statementVm.TenantId = tenant.Id;
+                            statementVm.TenantName = tenant.TenantName;
+                            statementVm.DateFrom = leaseStart.ToString("yyyy-MM-dd");
+                            statementVm.DateTo = new DateTime(year, month, DateTime.DaysInMonth(year, month)).ToString("yyyy-MM-dd");
+                            foreach (var transaction in transactions)
+                            {
+                                balanceTrack = transaction.TransactionCode != 15 ? balanceTrack + transaction.TransactionAmount : balanceTrack - transaction.TransactionAmount;
+                            }
+
+                            statementVm.Balance = balanceTrack;
+                            statementsVm.Add(statementVm);
+                        }
+
+                        leaseStart = leaseStart.AddMonths(1);
+                    }
+                    
+                }
+            }
+
+            return Json(statementsVm);
+        }
+
+        [HttpPost, Route("GetStatement")]
+        public async Task<IHttpActionResult> GetStatement(StatementsViewModel statementVm)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            ApplicationDbContext SafriSoftApp = new ApplicationDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var AssignedTenantViewModel = new List<AssignedTenantViewModel>();
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+
+            var statementDetailsVm = new StatementDetailsViewModel();
+
+            statementDetailsVm.organisation = SafriSoftApp.Organisations.FirstOrDefault(x => x.OrganisationId == orgId);
+
+            var tenant = SafriSoft.Tenants.FirstOrDefault(x => x.Id == statementVm.TenantId);
+            statementDetailsVm.tenant = tenant;
+
+            var unitId = SafriSoft.Assigned.FirstOrDefault(x => x.TenantId == statementVm.TenantId).UnitId;
+            var unitDetails = SafriSoft.Units.FirstOrDefault(x => x.Id == unitId);
+            statementDetailsVm.unit = unitDetails;
+
+            var leaseStart = tenant.DateLeaseStart;
+            var dateFrom = DateTime.Parse(statementVm.DateFrom);
+            var dateTo = DateTime.Parse(statementVm.DateTo);
+            decimal? balanceTrack = 0;
+
+            if (leaseStart != dateFrom)
+            {
+                while (leaseStart < dateFrom)
+                {
+                    int year = leaseStart.Year;
+                    int month = leaseStart.Month;
+
+                    var tenantTransactions = SafriSoft.Transactions.Where(x => x.TenantId == tenant.Id && x.TransactionDate.Year == leaseStart.Year && x.TransactionDate.Month == leaseStart.Month).ToList();
+
+                    foreach (var tenantTransaction in tenantTransactions)
+                    {
+                        balanceTrack = tenantTransaction.TransactionCode != 15 ? balanceTrack + tenantTransaction.TransactionAmount : balanceTrack - tenantTransaction.TransactionAmount;
+                    }
+
+                    leaseStart = leaseStart.AddMonths(1);
+                }
+            }
+
+            statementDetailsVm.BalanceBF = balanceTrack;
+            
+            var transactions = SafriSoft.Transactions.Where(x => x.TenantId == tenant.Id && x.TransactionDate.Year == dateFrom.Year && x.TransactionDate.Month == dateFrom.Month).ToList();
+
+            if (transactions.Count > 0)
+            {
+                
+                foreach (var transaction in transactions)
+                {
+                    statementDetailsVm.transactions.Add(transaction);
+                    balanceTrack = transaction.TransactionCode != 15 ? balanceTrack + transaction.TransactionAmount : balanceTrack - transaction.TransactionAmount;
+                }
+            }
+
+            statementDetailsVm.Balance = balanceTrack;
+
+            return Json(statementDetailsVm);
         }
 
         [HttpPost, Route("ChangeRecordStatus")]
@@ -1196,7 +1397,7 @@ namespace SafriSoftv1._3.Controllers.API
                     {
                         conn.Open();
                         var cmd = conn.CreateCommand();
-                        cmd.CommandText = string.Format("DELETE from [{0}].[dbo].[Document] where Id = {1}", conn.Database, RecordData.Id);
+                        cmd.CommandText = string.Format("DELETE from [{0}].[dbo].[Documents] where Id = {1}", conn.Database, RecordData.Id);
                         cmd.ExecuteNonQuery();
                         conn.Close();
                     }
@@ -1207,7 +1408,7 @@ namespace SafriSoftv1._3.Controllers.API
                     {
                         conn.Open();
                         var cmd = conn.CreateCommand();
-                        cmd.CommandText = string.Format("DELETE from [{0}].[dbo].[NOK] where Id = {1}", conn.Database, RecordData.Id);
+                        cmd.CommandText = string.Format("DELETE from [{0}].[dbo].[NOKs] where Id = {1}", conn.Database, RecordData.Id);
                         cmd.ExecuteNonQuery();
                         conn.Close();
                     }
@@ -1243,7 +1444,7 @@ namespace SafriSoftv1._3.Controllers.API
                     cmd.CommandText = string.Format("SELECT [OrganisationId],[OrganisationName],[OrganisationEmail],[OrganisationCell],[OrganisationLogo],[OrganisationStreet],[OrganisationSuburb],[OrganisationCity],[OrganisationCode],[AccountName],[AccountNo],[BankName],[BranchName],[BranchCode],[ClientReference],[VATNumber] from [{0}].[dbo].[Organisations]", conn.Database);
 
                     var orderCmd = conn.CreateCommand();
-                    orderCmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transaction] Where TenantId = '{1}' AND TransactionDate = '{2}' AND (TransactionCode = '{3}' OR TransactionCode = '{4}')", conn.Database, TransactionData.TransactionFor, DateTime.Parse(TransactionData.DateTransactionRaised), 10, 20);
+                    orderCmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transactions] Where TenantId = '{1}' AND TransactionDate = '{2}' AND (TransactionCode = '{3}' OR TransactionCode = '{4}')", conn.Database, TransactionData.TransactionFor, DateTime.Parse(TransactionData.DateTransactionRaised), 10, 20);
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -1285,7 +1486,7 @@ namespace SafriSoftv1._3.Controllers.API
                     }
 
                     var customerCmd = conn.CreateCommand();
-                    customerCmd.CommandText = string.Format("SELECT [TenantName],[TenantEmail],[TenantCell],[TenantAddress] from [{0}].[dbo].[Tenant] where Id = '{1}'", conn.Database, customerId);
+                    customerCmd.CommandText = string.Format("SELECT [TenantName],[TenantEmail],[TenantCell],[TenantAddress] from [{0}].[dbo].[Tenants] where Id = '{1}'", conn.Database, customerId);
 
                     using (var reader = customerCmd.ExecuteReader())
                     {
@@ -1314,11 +1515,562 @@ namespace SafriSoftv1._3.Controllers.API
             }
         }
 
+        [HttpPost, Route("SafriOrderRequest")]
+        public async Task<IHttpActionResult> SafriOrderRequest(OrderRequestViewModel orderRequest)
+        {
+            try
+            {
+                var createEmail = new SafriSoftEmailService();
+                var toAddress = new List<string>();
+                var toCCAddress = new List<string>();
+                toAddress.Add("support@safrisoft.com");
+
+                var subject = "Order Request - " + orderRequest.UserOrganisation;
+                var emailBody = "An order has been request for: " + orderRequest.Package + " - Rental <br/><br/> This email has been sent by: " + orderRequest.UserEmail;
+                createEmail.SaveEmail(subject, emailBody, "support@safrisoft.com", toAddress.ToArray(), toCCAddress.ToArray());
+                return Json(new { Success = true, Message = "Order request has been sent" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Success = false, Error = ex.ToString() });
+            }
+        }
+
+        [HttpPost, Route("SendCustomEmail")]
+        public async Task<IHttpActionResult> SendCustomEmail(EmailViewModel email)
+        {
+            try
+            {
+                ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+                string userId = IdentityExtensions.GetUserId(User.Identity);
+                var safriSoftImsDb = new SafriSoftDbContext();
+                var createEmail = new SafriSoftEmailService();
+                var toAddress = new List<string>();
+                var toCCAddress = new List<string>();
+
+                toAddress.Add(email.EmailAddress);
+
+                var subject = email.EmailSubject;
+                var emailBody = email.EmailBody;
+
+                createEmail.SaveEmail(subject, emailBody, "support@safrisoft.com", toAddress.ToArray(), toCCAddress.ToArray());
+
+                return Json(new { Success = true, Message = "Email has been sent" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Success = false, Error = ex.ToString() });
+            }
+        }
+
+        [HttpPost, Route("SendTenantStatementEmail")]
+        public async Task<IHttpActionResult> SendTenantStatementEmail(SendTenantStatementViewModel sendTenantStatementVm)
+        {
+            try
+            {
+                ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+                string userId = IdentityExtensions.GetUserId(User.Identity);
+                var safriSoftRMSDb = new SafriSoftDbContext();
+                var tenant = safriSoftRMSDb.Tenants.FirstOrDefault(x => x.Id == sendTenantStatementVm.TenantId);
+                var createEmail = new SafriSoftEmailService();
+                var toAddress = new List<string>();
+                var toCCAddress = new List<string>();
+                var sb = new StringBuilder();
+
+                toAddress.Add(tenant.TenantEmail);
+
+                var subject = "Tax Invoice & Statement";
+
+                sb.Append($"Your statement & Invoice is ready to be viewed.<br /><br />");
+                sb.Append($"Statement & Invoice for period: <br />");
+                sb.Append($"{sendTenantStatementVm.DateFrom} To {sendTenantStatementVm.DateTo} <br /><br />");
+                sb.Append($"Please click here <a href='https://rms.safrisoft.com/Rental/TenantStatementPDF?TenantId={sendTenantStatementVm.TenantId}&DateFrom={sendTenantStatementVm.DateFrom}&DateTo={sendTenantStatementVm.DateTo}&OrgName={sendTenantStatementVm.OrganisationName}'>Statement & Invoice</a>");
+
+                var emailBody = sb.ToString();
+
+                createEmail.SaveEmail(subject, emailBody, "support@safrisoft.com", toAddress.ToArray(), toCCAddress.ToArray());
+
+                return Json(new { Success = true, Message = "Email statement has been sent" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Success = false, Error = ex.ToString() });
+            }
+        }
+
+        [HttpGet, Route("GetUserData")]
+        public async Task<IHttpActionResult> GetUserData()
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var UserViewModel = new List<UserViewModel>();
+            var countUsers = 0;
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var username = "";
+            var userState = "";
+
+            var safriDbConn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString());
+            safriDbConn.Open();
+
+            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["IdentityDbContext"].ToString()))
+            {
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("SELECT u.[Id],[Email],[UserName] from [dbo].[AspNetUsers] u, [dbo].[AspNetUserClaims] c WHERE u.Id = c.UserId AND c.ClaimType = 'Organisation' AND c.ClaimValue = '{1}'", conn.Database, getOrgClaim);
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        try
+                        {
+                            var usernameClaim = userManager.GetClaims(reader.GetString(0)).First(x => x.Type == "Username");
+                            username = usernameClaim.Value;
+                        }
+                        catch (Exception Ex)
+                        {
+                            username = reader.GetString(1);
+                        }
+                        try
+                        {
+                            var usernameState = userManager.GetClaims(reader.GetString(0)).First(x => x.Type == "AccountLocked");
+                            userState = usernameState.Value;
+                        }
+                        catch (Exception Ex)
+                        {
+                            userState = "";
+                        }
+
+                        var Users = new UserViewModel();
+                        countUsers += 1;
+                        Users.Id = countUsers;
+                        Users.UserId = reader.GetString(0);
+                        Users.Email = reader.GetString(1);
+                        Users.Username = username;
+                        Users.UserRole = userManager.GetRoles(Users.UserId).First();
+                        Users.UserState = userState;
+                        var numberOfOrdersCmd = conn.CreateCommand();
+                        //numberOfOrdersCmd.CommandText = string.Format("SELECT count([Id]) from [{0}].[dbo].[Orders] WHERE UserId = '{1}'", safriDbConn.Database, reader.GetString(0));
+                        Users.NumberOfOrders = 0;
+                        var randValueSoldCmd = conn.CreateCommand();
+                        //randValueSoldCmd.CommandText = string.Format("SELECT sum([OrderWorth]) from [{0}].[dbo].[Orders] WHERE UserId = '{1}'", safriDbConn.Database, reader.GetString(0));
+                        //try
+                        //{
+                        //    Users.RandValueSold = (Decimal)randValueSoldCmd.ExecuteScalar();
+                        //}
+                        //catch (Exception Ex)
+                        //{
+                        //    Users.RandValueSold = 0;
+                        //}
+
+                        UserViewModel.Add(Users);
+                    }
+                    reader.NextResult();
+                    reader.Close();
+                }
+                safriDbConn.Close();
+                conn.Close();
+                return Json(UserViewModel);
+            }
+        }
+
+        [HttpPost, Route("UserCreate")]
+        public async Task<IHttpActionResult> UserCreate(RegisterViewModel UserData)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var UserViewModel = new List<UserViewModel>();
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+
+            var exceeded = CheckPackageAccess("Users", orgId);
+
+            if (exceeded == true)
+            {
+                return Json(new { Success = false, Error = "You have exceeded the number of Users to add. Please upgrade Package" });
+            }
+
+            var user = new ApplicationUser { UserName = UserData.Email, Email = UserData.Email };
+            var result = await userManager.CreateAsync(user, UserData.Password);
+
+            if (result.Succeeded)
+            {
+                Claim OrganisationClaim = new Claim("Organisation", UserData.OrganisationName);
+                var saveClaim = await userManager.AddClaimAsync(user.Id, OrganisationClaim);
+                Claim UsernameClaim = new Claim("Username", UserData.Username);
+                var saveUsernameClaim = await userManager.AddClaimAsync(user.Id, UsernameClaim);
+                var saveRole = userManager.AddToRole(user.Id, UserData.Role);
+                var subject = "SafriSoft - Access";
+                var emailBody = $"You have been granted access to the SafriSoft Rental Management Software by your Organisation Admin. <br/><br/> Please use the below details to access the software: <a href='https://rms.safrisoft.com'>Rental Management Software</a> <br/> Username: {user.UserName} <br/> Password: {UserData.Password}";
+
+                var toAddress = new List<string>();
+                var toCCAddress = new List<string>();
+                toAddress.Add(user.Email);
+                var createEmail = new SafriSoftEmailService();
+                createEmail.SaveEmail(subject, emailBody, "support@safrisoft.com", toAddress.ToArray(), toCCAddress.ToArray());
+                //await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
+
+                // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
+                // Send an email with this link
+                // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
+                // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+                // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
+
+            }
+
+            return Json(result);
+        }
+
+        [HttpPost, Route("UserLock")]
+        public async Task<IHttpActionResult> UserLock(UserViewModel UserData)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var UserViewModel = new List<UserViewModel>();
+            var userState = "";
+
+            try
+            {
+                var usernameState = userManager.GetClaims(UserData.UserId).First(x => x.Type == "AccountLocked");
+                userState = usernameState.Value;
+            }
+            catch (Exception Ex)
+            {
+                userState = "Error";
+            }
+
+            try
+            {
+                if (userState == "Error")
+                {
+                    Claim UsernameStateClaim = new Claim("AccountLocked", "Locked");
+                    var saveUsernameStateClaim = await userManager.AddClaimAsync(UserData.UserId, UsernameStateClaim);
+                }
+                else if (userState == "Locked")
+                {
+                    Claim UsernameStateClaim = new Claim("AccountLocked", "Locked");
+                    userManager.RemoveClaim(UserData.UserId, UsernameStateClaim);
+                    Claim UsernameStateClaimU = new Claim("AccountLocked", "UnLocked");
+                    var saveUsernameStateClaim = await userManager.AddClaimAsync(UserData.UserId, UsernameStateClaimU);
+                }
+                else if (userState == "UnLocked")
+                {
+                    Claim UsernameStateClaimU = new Claim("AccountLocked", "UnLocked");
+                    userManager.RemoveClaim(UserData.UserId, UsernameStateClaimU);
+                    Claim UsernameStateClaimL = new Claim("AccountLocked", "Locked");
+                    var saveUsernameStateClaim = await userManager.AddClaimAsync(UserData.UserId, UsernameStateClaimL);
+                }
+                return Json(new { Success = true });
+            }
+            catch (Exception Ex)
+            {
+                return Json(new { Success = false, Error = Ex.Message.ToString() });
+            }
+
+        }
+
+        [HttpGet, Route("GetOrganisationDetails")]
+        public async Task<IHttpActionResult> GetOrganisationDetails()
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var OrganisationViewModel = new List<OrganisationViewModel>();
+            var countUsers = 0;
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+
+            ApplicationDbContext SafriSoftAppDb = new ApplicationDbContext();
+
+            var getOrganisation = SafriSoftAppDb.Organisations.FirstOrDefault(x => x.OrganisationName == getOrgClaim);
+
+            //var OrganisationDetails = new OrganisationViewModel();
+
+            //OrganisationDetails.OrganisationId = getOrganisation.OrganisationId;
+            //OrganisationDetails.OrganisationName = getOrganisation.OrganisationName;
+            //OrganisationDetails.OrganisationEmail = getOrganisation.OrganisationEmail;
+            //OrganisationDetails.OrganisationCell = getOrganisation.OrganisationCell;
+            //OrganisationDetails.OrganisationLogo = getOrganisation.OrganisationLogo;
+            //OrganisationDetails.OrganisationStreet = getOrganisation.OrganisationStreet;
+            //OrganisationDetails.OrganisationSuburb = getOrganisation.OrganisationSuburb;
+            //OrganisationDetails.OrganisationCity = getOrganisation.OrganisationCity;
+            //OrganisationDetails.OrganisationCode = getOrganisation.OrganisationCode;
+            //OrganisationDetails.AccountName = "";
+            //OrganisationDetails.AccountNo = 0;
+            //OrganisationDetails.BankName = "";
+            //OrganisationDetails.BranchName = "";
+            //OrganisationDetails.BranchCode = "";
+            //OrganisationDetails.ClientReference = "";
+            //OrganisationDetails.VATNumber = 0;
+            //OrganisationViewModel.Add(OrganisationDetails);
+
+            return Json(getOrganisation);
+
+            //using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["IdentityDbContext"].ToString()))
+            //{
+            //    conn.Open();
+            //    var cmd = conn.CreateCommand();
+            //    cmd.CommandText = string.Format("SELECT [OrganisationId],[OrganisationName],[OrganisationEmail],[OrganisationCell],[OrganisationLogo],[OrganisationStreet],[OrganisationSuburb],[OrganisationCity],[OrganisationCode],[AccountName],[AccountNo],[BankName],[BranchName],[BranchCode],[ClientReference],[VATNumber] from [{0}].[dbo].[Organisations] WHERE [OrganisationName] = '{1}'", conn.Database, getOrgClaim);
+
+            //    using (var reader = cmd.ExecuteReader())
+            //    {
+            //        while (reader.Read())
+            //        {
+            //            var OrganisationDetails = new OrganisationViewModel();
+            //            OrganisationDetails.OrganisationId      = reader.GetInt32(0);
+            //            OrganisationDetails.OrganisationName    = reader.GetString(1);
+            //            OrganisationDetails.OrganisationEmail   = reader.GetString(2) != null ? reader.GetString(2) : "";
+            //            OrganisationDetails.OrganisationCell    = reader.GetString(3) != null ? reader.GetString(3) : "";
+            //            OrganisationDetails.OrganisationLogo    = reader.GetString(4);
+            //            OrganisationDetails.OrganisationStreet  = reader.GetString(5);
+            //            OrganisationDetails.OrganisationSuburb  = reader.GetString(6);
+            //            OrganisationDetails.OrganisationCity    = reader.GetString(7);
+            //            OrganisationDetails.OrganisationCode    = reader.GetInt32(8);
+            //            OrganisationDetails.AccountName         = reader.GetString(9);
+            //            OrganisationDetails.AccountNo           = reader.GetInt32(10);
+            //            OrganisationDetails.BankName            = reader.GetString(11);
+            //            OrganisationDetails.BranchName          = reader.GetString(12);
+            //            OrganisationDetails.BranchCode          = reader.GetString(13);
+            //            OrganisationDetails.ClientReference     = reader.GetString(14);
+            //            OrganisationDetails.VATNumber           = reader.GetInt32(15);
+            //            OrganisationViewModel.Add(OrganisationDetails);
+            //        }
+            //        reader.NextResult();
+            //        reader.Close();
+            //    }
+
+            //    return Json(OrganisationViewModel);
+            //}
+        }
+
+        [HttpPost, Route("SaveOrganisationDetails")]
+        public async Task<IHttpActionResult> SaveOrganisationDetails(Organisations Organisation)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var OrganisationViewModel = new List<OrganisationViewModel>();
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            ApplicationDbContext SafriSoft = new ApplicationDbContext();
+
+            try
+            {
+                SafriSoft.Entry(Organisation).State = EntityState.Modified;
+                SafriSoft.SaveChanges();
+
+                return Json(new { Success = true });
+            }
+            catch (Exception Ex)
+            {
+                return Json(new { Success = false, Error = Ex.ToString() });
+            }
+        }
+
+        [HttpGet, Route("GetCharges")]
+        public async Task<IHttpActionResult> GetCharges()
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+
+            var chargeVm = new List<ChargeViewModel>();
+
+            var charges = SafriSoft.Charges.Where(x => x.OrganisationId == orgId).ToList();
+            foreach(var c in charges)
+            {
+                var charge = new ChargeViewModel();
+                charge.Id = c.Id;
+                charge.Code = c.Code;
+                charge.Type = c.Type;
+                charge.Amount = c.Amount;
+                charge.Name = c.Name;
+                charge.Effective = c.Effective.ToString("yyyy-MM-dd");
+                chargeVm.Add(charge);
+            }
+            return Json(chargeVm);
+        }
+
+        [HttpPost, Route("SaveCharge")]
+        public async Task<IHttpActionResult> SaveCharge(ChargeViewModel chargeVm)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+            string message = string.Empty;
+
+            int result;
+
+            var exists = SafriSoft.Charges.AsNoTracking().Where(x => x.Code == chargeVm.Code && x.Id != chargeVm.Id).FirstOrDefault();
+
+            if (exists != null)
+                return Json(new { success = false, message = "Charge code already exists" });
+
+            var charge = new Charge();
+            charge.Id = chargeVm.Id;
+            charge.Name = chargeVm.Name;
+            charge.Code = chargeVm.Code;
+            charge.Type = chargeVm.Type;
+            charge.Amount = chargeVm.Amount;
+            charge.Effective = DateTime.Parse(chargeVm.Effective);
+            charge.OrganisationId = orgId;
+
+            if (chargeVm.Id == 0)
+            {
+                var addedCharge = SafriSoft.Charges.Add(charge);
+                result = await SafriSoft.SaveChangesAsync();
+                message = "Successfully created charge!";
+            }
+            else
+            {
+                SafriSoft.Entry(charge).State = EntityState.Modified;
+                SafriSoft.SaveChanges();
+                result = 1;
+                message = "Successfully updated charge!";
+            }            
+
+            if (result > 0)
+                return Json(new { success = true, message = message });
+            else
+                return Json(new { success = false, message = "Error saving the charge" });
+
+        }
+
+        [HttpPost, Route("RemoveCharge")]
+        public async Task<IHttpActionResult> RemoveCharge(ChargeViewModel chargeVm)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+            string message = string.Empty;
+
+            var charge = new Charge();
+            charge.Id = chargeVm.Id;
+            charge.Name = chargeVm.Name;
+            charge.Code = chargeVm.Code;
+            charge.Type = chargeVm.Type;
+            charge.Amount = chargeVm.Amount;
+            charge.Effective = DateTime.Parse(chargeVm.Effective);
+            charge.OrganisationId = orgId;
+
+            try
+            {
+                SafriSoft.Entry(charge).State = EntityState.Deleted;
+                var result = SafriSoft.Charges.Remove(charge);
+                SafriSoft.SaveChanges();
+                message = "Successfully removed charged!";
+                return Json(new { success = true, message = message });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet, Route("GetUnitCharges/{Unitid}")]
+        public async Task<IHttpActionResult> GetUnitCharges(int UnitId)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+
+            var chargeVm = new List<ChargeViewModel>();
+
+            var charges = SafriSoft.Charges.Where(x => x.OrganisationId == orgId).ToList();
+            foreach (var c in charges)
+            {
+                int count = SafriSoft.UnitCharges.Where(x => x.FeeId == c.Id && x.UnitId == UnitId).Count();
+                var charge = new ChargeViewModel();
+                charge.Id = c.Id;
+                charge.Code = c.Code;
+                charge.Type = c.Type;
+                charge.Amount = c.Amount;
+                charge.Name = c.Name;
+                charge.Effective = c.Effective.ToString("yyyy-MM-dd");
+                charge.UnitAssigned = count > 0 ? true : false;
+                charge.UnitChargeId = count > 0 ? SafriSoft.UnitCharges.Where(x => x.FeeId == c.Id && x.UnitId == UnitId).Select(x => x.Id).FirstOrDefault() : 0;
+                chargeVm.Add(charge);
+            }
+            return Json(chargeVm);
+        }
+
+        [HttpPost, Route("AddUnitCharge")]
+        public async Task<IHttpActionResult> AddUnitCharge(ChargeViewModel chargeVm)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+            string message = string.Empty;
+
+            var UnitCharge = new UnitCharge();
+            UnitCharge.FeeId = chargeVm.Id;
+            UnitCharge.UnitId = chargeVm.UnitId;
+
+            try
+            {
+                SafriSoft.UnitCharges.Add(UnitCharge);
+                SafriSoft.SaveChanges();
+                message = "Successfully added charge to unit!";
+                return Json(new { success = true, message = message });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost, Route("RemoveUnitCharge")]
+        public async Task<IHttpActionResult> RemoveUnitCharge(ChargeViewModel chargeVm)
+        {
+            ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
+            string userId = IdentityExtensions.GetUserId(User.Identity);
+            var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
+            var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
+            string message = string.Empty;
+
+            var UnitCharge = new UnitCharge();
+            UnitCharge.Id = chargeVm.UnitChargeId;
+            UnitCharge.FeeId = chargeVm.Id;
+            UnitCharge.UnitId = chargeVm.UnitId;
+
+            try
+            {
+                SafriSoft.Entry(UnitCharge).State = EntityState.Deleted;
+                var result = SafriSoft.UnitCharges.Remove(UnitCharge);
+                SafriSoft.SaveChanges();
+                message = "Successfully removed charge from unit!";
+                return Json(new { success = true, message = message });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         // Reusable functions at the bottom
         public static JObject RaiseTransaction(int TransactionCode, string TransactionName, decimal? TransactionAmount, DateTime DateTransactionRaised, int TenantId)
         {
             SafriSoftDbContext SafriSoft = new SafriSoftDbContext();
             JObject o = new JObject();
+
+            var organisationId = SafriSoft.Tenants.FirstOrDefault(x => x.Id == TenantId).OrganisationId;
 
             var transactionCheck = SafriSoft.Transactions.FirstOrDefault(x => x.TransactionDate == DateTransactionRaised && x.TenantId == TenantId && x.TransactionCode == TransactionCode);
 
@@ -1335,7 +2087,7 @@ namespace SafriSoftv1._3.Controllers.API
                     {
                         conn.Open();
                         var cmd = conn.CreateCommand();
-                        cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[Transaction] ([TransactionCode],[TransactionName],[TransactionDate],[TenantId]) VALUES('{1}','{2}','{3}','{4}')", conn.Database, TransactionCode, TransactionName, DateTransactionRaised, TenantId);
+                        cmd.CommandText = string.Format("INSERT INTO  [{0}].[dbo].[Transactions] ([TransactionCode],[TransactionName],[TransactionDate],[TenantId],[OrganisationId]) VALUES('{1}','{2}','{3}','{4}','{5}')", conn.Database, TransactionCode, TransactionName, DateTransactionRaised, TenantId, organisationId);
                         cmd.ExecuteNonQuery();
                         conn.Close();
                     }
@@ -1354,7 +2106,53 @@ namespace SafriSoftv1._3.Controllers.API
             return o;
         }
 
-        
+        public bool CheckPackageAccess(string feature, int orgnaisationId)
+        {
+            SafriSoftDbContext SafriSoftImsDb = new SafriSoftDbContext();
+            ApplicationDbContext SafriSoftDb = new ApplicationDbContext();
+            var identityConn = new SqlConnection(ConfigurationManager.ConnectionStrings["IdentityDbContext"].ToString());
+            identityConn.Open();
+            var identityPackageCmd = identityConn.CreateCommand();
+            identityPackageCmd.CommandText = string.Format("SELECT pf.[Limit], os.[PackageId] from [dbo].[Organisations] o JOIN [dbo].[OrganisationSoftwares] os on os.[OrganisationId] = o.[OrganisationId] AND os.[SoftwareId] = 2 JOIN [dbo].[PackageFeatures] pf on pf.PackageId = os.[PackageId] AND pf.FeatureName = '{1}' WHERE o.[OrganisationId] = {2}", identityConn.Database, feature, orgnaisationId);
+            var identityPackageReader = identityPackageCmd.ExecuteReader();
+            var packageFeatureLimit = 0;
+            var limitExceeded = false;
+
+            if (identityPackageReader.Read())
+            {
+                packageFeatureLimit = identityPackageReader.GetInt32(0);
+                var package = identityPackageReader.GetInt32(1);
+                if (feature == "Tenants")
+                {
+                    var numberOfCustomers = SafriSoftImsDb.Tenants.Where(x => x.OrganisationId == orgnaisationId).ToList().Count();
+                    if (numberOfCustomers >= packageFeatureLimit && package != 3)
+                    {
+                        limitExceeded = true;
+                    }
+                }
+                else if (feature == "Units")
+                {
+                    var numberOfOrders = SafriSoftImsDb.Units.Where(x => x.OrganisationId == orgnaisationId).ToList().Count();
+                    if (numberOfOrders >= packageFeatureLimit && package != 3)
+                    {
+                        limitExceeded = true;
+                    }
+                }else if (feature == "Users")
+                {
+                    var organisationName = SafriSoftDb.Organisations.FirstOrDefault(x => x.OrganisationId == orgnaisationId).OrganisationName;
+                    var currentNumber = SafriSoftDb.Users.Where(x => x.Claims.Where(c => c.ClaimType == "Organisation").FirstOrDefault().ClaimValue == organisationName).ToList().Count();
+                    if (currentNumber >= packageFeatureLimit)
+                    {
+                        limitExceeded = true;
+                    }
+                }
+            }
+
+            identityConn.Close();
+
+            return limitExceeded;
+        }
+
         public static byte[] CompressStream(byte[] uncompressedData)
         {
             using (var msi = new MemoryStream(uncompressedData))
@@ -1368,6 +2166,21 @@ namespace SafriSoftv1._3.Controllers.API
                 }
             }
         }
-                
+
+        public int GetOrganisationId(string organisationName)
+        {
+            int organisationId = 0;
+
+            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["IdentityDbContext"].ToString()))
+            {
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("SELECT [OrganisationId] from [{0}].[dbo].[Organisations] where OrganisationName = '{1}'", conn.Database, organisationName);
+                organisationId = (int)cmd.ExecuteScalar();
+                conn.Close();
+            }
+
+            return organisationId;
+        }
     }
 }

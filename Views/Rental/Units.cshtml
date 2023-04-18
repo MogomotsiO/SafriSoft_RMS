@@ -47,20 +47,21 @@
                         <!-- /.card-header -->
                         <div class="card-body">
                             <span class="text-right mr-1"><button id="CreateUnit" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-home text-success"></i> Create Unit</button></span>
+                            <span class="text-right mr-1"><button id="CreateCharge" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-money-bill text-success"></i> Create Charge</button></span>
                             @*<span class="text-right"><button id="docs-create-view" type="button" class="btn btn-light"><i class="fa fa-plus-circle"></i> Add Documents</button></span>*@
                         </div>
                         <div class="card-body">
                             <table id="unit-table" class="table">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
                                         <th>Number</th>
                                         <th>Name</th>
                                         <th>Description</th>
                                         <th>Rooms</th>
                                         <th>Sharing</th>
                                         <th>Price</th>
-                                        <th>Assign</th>
+                                        <th style="width:150px;">Charge(s)</th>
+                                        <th style="width:150px;">Assign</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -83,7 +84,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Create Unit</h4>
+                <h5 class="modal-title">@*<i class="fa fa-plus"></i>*@Create Unit</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -91,40 +92,40 @@
             <div class="modal-body login-card-body">
                 <div class="row">
                     <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
+                        <div class="input-group form-group bmd-form-group is-filled">
                             <label class="bmd-label-floating">Unit Number</label>
                             <input id="unit-number" class="form-control" type="text">
                             <div class="input-group-append">
                                 <div class="input-group-text bg-white border-white">
-                                    <span class="fa fa-edit text-success"></span>
+                                    <span class="far fa-edit text-success"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
+                        <div class="input-group form-group bmd-form-group is-filled">
                             <label class="bmd-label-floating">Unit Name</label>
                             <input id="unit-name" class="form-control" type="text">
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-edit text-success"></span>
+                                    <span class="far fa-edit text-success"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
+                        <div class="input-group form-group bmd-form-group is-filled">
                             <label class="bmd-label-floating">Unit Description</label>
                             <input id="unit-description" class="form-control" type="text">
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-edit text-success"></span>
+                                    <span class="far fa-edit text-success"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
+                        <div class="input-group form-group bmd-form-group is-filled">
                             <label class="bmd-label-floating">Unit Rooms</label>
                             <input id="unit-rooms" class="form-control" type="text">
                             <div class="input-group-append">
@@ -135,9 +136,9 @@
                         </div>
                     </div>
                     <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group is-focused">
+                        <div class="input-group form-group bmd-form-group is-filled">
                             <label class="bmd-label-floating">Sharing</label>
-                            <select id="unit-sharing" class="form-control"><option value="Yes">Yes</option><option value="No">No</option></select>
+                            <select id="unit-sharing" class="select2 select2bs4"><option value="Yes">Yes</option><option value="No">No</option></select>
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
                                     <span class="fa fa-users text-success"></span>
@@ -146,12 +147,12 @@
                         </div>
                     </div>
                     <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
+                        <div class="input-group form-group bmd-form-group is-filled">
                             <label class="bmd-label-floating">Unit Price</label>
                             <input id="unit-price" class="form-control" type="text">
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-building text-success"></span>
+                                    <span class="far fa-building text-success"></span>
                                 </div>
                             </div>
                         </div>
@@ -173,7 +174,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Edit Unit</h4>
+                <h5 class="modal-title">@*<i class="fa fa-plus"></i>*@Edit Unit</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -187,7 +188,7 @@
                             <input id="edit-unit-number" class="form-control" type="text">
                             <div class="input-group-append">
                                 <div class="input-group-text bg-white border-white">
-                                    <span class="fa fa-edit text-success"></span>
+                                    <span class="far fa-edit text-success"></span>
                                 </div>
                             </div>
                         </div>
@@ -198,7 +199,7 @@
                             <input id="edit-unit-name" class="form-control" type="text">
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-edit text-success"></span>
+                                    <span class="far fa-edit text-success"></span>
                                 </div>
                             </div>
                         </div>
@@ -209,7 +210,7 @@
                             <input id="edit-unit-description" class="form-control" type="text">
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-edit text-success"></span>
+                                    <span class="far fa-edit text-success"></span>
                                 </div>
                             </div>
                         </div>
@@ -228,7 +229,7 @@
                     <div class="mb-3 col-md-12">
                         <div class="input-group form-group bmd-form-group is-focused">
                             <label class="bmd-label-floating">Sharing</label>
-                            <select id="edit-unit-sharing" class="form-control"><option value="Yes">Yes</option><option value="No">No</option></select>
+                            <select id="edit-unit-sharing" class="select2 select2bs4"><option></option><option value="Yes">Yes</option><option value="No">No</option></select>
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
                                     <span class="fa fa-users text-success"></span>
@@ -242,7 +243,7 @@
                             <input id="edit-unit-price" class="form-control" type="text">
                             <div class="input-group-append">
                                 <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-building text-success"></span>
+                                    <span class="far fa-building text-success"></span>
                                 </div>
                             </div>
                         </div>
@@ -251,7 +252,7 @@
             </div>
             <div class="modal-footer justify-content-right">
                 <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
-                <button id="unit-final-update" type="button" class="btn btn-light"><i class="fa fa-user text-success"></i> Update</button>
+                <button id="unit-final-update" type="button" class="btn btn-light"><i class="fa fa-home text-success"></i> Update</button>
             </div>
         </div>
         <!-- /.modal-content -->
@@ -357,7 +358,7 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="assign-title" class="modal-title">@*<i class="fa fa-plus"></i>*@</h3>
+                <h5 id="assign-title" class="modal-title">@*<i class="fa fa-plus"></i>*@</h5>
                 <input type="text" id="tenant-id" hidden />
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -370,13 +371,12 @@
                     </div>
                     <!-- /.card-header -->
                     <div class="card-body">
-                        @*<span class="text-right mr-1"><button id="CreateTenantNok" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-user"></i> Create NOK</button></span>*@
+
                     </div>
                     <div class="card-body">
                         <table id="assign-tenant-table" class="table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Cell</th>
@@ -399,187 +399,109 @@
     <!-- /.modal-dialog -->
 </div>
 
-
 <!-- Modal -->
-<div class="modal fade" id="create-noks-modal">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="create-charge">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Create NOK</h4>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body login-card-body">
-                <div class="row">
-                    <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
-                            <label class="bmd-label-floating">NOK Name</label>
-                            <input id="nok-name" class="form-control" type="text">
-                            <div class="input-group-append">
-                                <div class="input-group-text bg-white border-white">
-                                    <span class="fa fa-user text-success"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
-                            <label class="bmd-label-floating">NOK Email</label>
-                            <input id="nok-email" class="form-control" type="text">
-                            <div class="input-group-append">
-                                <div class="input-group-text  bg-white border-white">
-                                    <span class="fas fa-envelope text-success"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
-                            <label class="bmd-label-floating">NOK Cell</label>
-                            <input id="nok-cell" class="form-control" type="text">
-                            <div class="input-group-append">
-                                <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-phone text-success"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group is-focused">
-                            <label class="bmd-label-floating">Relationship</label>
-                            <select id="nok-relationship" class="form-control">
-                                <option value="Mother">Mother</option>
-                                <option value="Father">Father</option>
-                                <option value="Brother">Brother</option>
-                                <option value="Sister">Sister</option>
-                                <option value="Spouse">Spouse</option>
-                                <option value="Other">Other</option>
-                            </select>
-                            <div class="input-group-append">
-                                <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-home text-success"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            <div class="modal-footer justify-content-right">
-                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
-                <button id="tenant-nok-final-create" type="button" class="btn btn-light"><i class="fa fa-user text-success"></i> Create</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="update-noks-modal">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">@*<i class="fa fa-plus"></i>*@Update NOK</h4>
-                <input type="text" id="nok-id" hidden />
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body login-card-body">
-                <div class="row">
-                    <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
-                            <label class="bmd-label-floating">NOK Name</label>
-                            <input id="edit-nok-name" class="form-control" type="text">
-                            <div class="input-group-append">
-                                <div class="input-group-text bg-white border-white">
-                                    <span class="fa fa-user text-success"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
-                            <label class="bmd-label-floating">NOK Email</label>
-                            <input id="edit-nok-email" class="form-control" type="text">
-                            <div class="input-group-append">
-                                <div class="input-group-text  bg-white border-white">
-                                    <span class="fas fa-envelope text-success"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group">
-                            <label class="bmd-label-floating">NOK Cell</label>
-                            <input id="edit-nok-cell" class="form-control" type="text">
-                            <div class="input-group-append">
-                                <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-phone text-success"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 col-md-12">
-                        <div class="input-group form-group bmd-form-group is-focused">
-                            <label class="bmd-label-floating">Relationship</label>
-                            <select id="edit-nok-relationship" class="form-control">
-                                <option value="Mother">Mother</option>
-                                <option value="Father">Father</option>
-                                <option value="Brother">Brother</option>
-                                <option value="Sister">Sister</option>
-                                <option value="Spouse">Spouse</option>
-                                <option value="Other">Other</option>
-                            </select>
-                            <div class="input-group-append">
-                                <div class="input-group-text  bg-white border-white">
-                                    <span class="fa fa-home text-success"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            <div class="modal-footer justify-content-right">
-                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
-                <button id="tenant-nok-final-update" type="button" class="btn btn-light"><i class="fa fa-user text-success"></i> Update</button>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
-
-
-<!-- Modal -->
-<div class="modal fade" id="tenants-documents">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="tenants-documents-title" class="modal-title">@*<i class="fa fa-plus"></i>*@</h3>
-                <input type="text" id="tenant-id" hidden />
+                <h5 id="charge-title-header" class="modal-title">Charge Management</h5>
+                <input type="text" id="unit-charge-id" hidden />
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="card">
+                    <div class="card-header card-header-success">
+                        <h4 class="card-title"><i class="fa fa-money-bill"></i> <span id="charge-title">Create</span></h4>
+                    </div>
                     <!-- /.card-header -->
-                    <div class="card-body">
-                        <div id="dropzone" class="fade">
-                            <h3>Drag & Drop File</h3>
+                    <div class="card-body mt-3">
+                        <div class="row">
+                            <div class="mb-3 col-md-12">
+                                <div class="input-group form-group bmd-form-group is-filled">
+                                    <label class="bmd-label-floating">Code</label>
+                                    <input id="charge-id" hidden class="form-control" type="text">
+                                    <input id="charge-code" class="form-control" type="number">
+                                    <div class="input-group-append">
+                                        <div class="input-group-text bg-white border-white">
+                                            <span class="far fa-edit text-success"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-12">
+                                <div class="input-group form-group bmd-form-group is-filled">
+                                    <label class="bmd-label-floating">Name</label>
+
+                                    <input id="charge-name" class="form-control" type="text">
+                                    <div class="input-group-append">
+                                        <div class="input-group-text bg-white border-white">
+                                            <span class="far fa-edit text-success"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-12">
+                                <div class="input-group form-group bmd-form-group is-filled">
+                                    <label class="bmd-label-floating">Amount</label>
+
+                                    <input id="charge-amount" class="form-control" type="number">
+                                    <div class="input-group-append">
+                                        <div class="input-group-text bg-white border-white">
+                                            <span class="far fa-edit text-success"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-12">
+                                <div class="input-group form-group bmd-form-group is-filled">
+                                    <label class="bmd-label-floating">Select Type</label>
+                                    <select class="select2 select2bs4" id="charge-type">
+                                        <option value="0"></option>
+                                        <option value="1">Once-off</option>
+                                        <option value="2">Monthly</option>
+                                    </select>
+                                    <div class="input-group-append">
+                                        <div class="input-group-text bg-white border-white">
+                                            <span class="far fa-edit text-success"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 col-md-12">
+                                <div class="input-group form-group bmd-form-group is-filled">
+                                    <label class="bmd-label-floating">Effective</label>
+
+                                    <input id="charge-date" class="form-control" type="date">
+                                    <div class="input-group-append">
+                                        <div class="input-group-text bg-white border-white">
+                                            <span class="far fa-edit text-success"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 col-md-12 text-right">
+                                <button id="ResetCharge" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-trash-restore text-success"></i> Reset</button>
+                                <button id="CreateChargeFinal" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-money-bill text-success"></i> <span id="charge-btn">Create</span></button>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="card mt-5">
+                    <div class="card-header card-header-success">
+                        <h4 class="card-title"><i class="fa fa-money-bill"></i> Existing Charges</h4>
+                    </div>
                     <div class="card-body">
-                        <table id="tenant-document-table" class="table">
+                        <table id="manage-charge-table" class="table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Filename</th>
-                                    <th>Date Created</th>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Effective</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -597,3 +519,252 @@
     </div>
     <!-- /.modal-dialog -->
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="add-charge">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="charge-title-header" class="modal-title">Add/Remove Charges</h5>
+                <input type="text" id="unit-charge-id" hidden />
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="card mt-5">
+                    <div class="card-header card-header-success">
+                        <h4 class="card-title"><i class="fa fa-money-bill"></i> Add Charges To Unit</h4>
+                    </div>
+                    <div class="card-body">
+                        <table id="add-charge-table" class="table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Effective</th>
+                                    <th>Add/Remove</th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!--<!--<!-- Modal -->
+<!--<div class="modal fade" id="create-noks-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">-->
+-->
+<!--@*<i class="fa fa-plus"></i>*@-->
+<!--<!--Create NOK</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body login-card-body">
+        <div class="row">
+            <div class="mb-3 col-md-12">
+                <div class="input-group form-group bmd-form-group">
+                    <label class="bmd-label-floating">NOK Name</label>
+                    <input id="nok-name" class="form-control" type="text">
+                    <div class="input-group-append">
+                        <div class="input-group-text bg-white border-white">
+                            <span class="fa fa-user text-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 col-md-12">
+                <div class="input-group form-group bmd-form-group">
+                    <label class="bmd-label-floating">NOK Email</label>
+                    <input id="nok-email" class="form-control" type="text">
+                    <div class="input-group-append">
+                        <div class="input-group-text  bg-white border-white">
+                            <span class="fas fa-envelope text-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 col-md-12">
+                <div class="input-group form-group bmd-form-group">
+                    <label class="bmd-label-floating">NOK Cell</label>
+                    <input id="nok-cell" class="form-control" type="text">
+                    <div class="input-group-append">
+                        <div class="input-group-text  bg-white border-white">
+                            <span class="fa fa-phone text-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 col-md-12">
+                <div class="input-group form-group bmd-form-group is-focused">
+                    <label class="bmd-label-floating">Relationship</label>
+                    <select id="nok-relationship" class="form-control">
+                        <option value="Mother">Mother</option>
+                        <option value="Father">Father</option>
+                        <option value="Brother">Brother</option>
+                        <option value="Sister">Sister</option>
+                        <option value="Spouse">Spouse</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="input-group-append">
+                        <div class="input-group-text  bg-white border-white">
+                            <span class="fa fa-home text-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer justify-content-right">
+        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+        <button id="tenant-nok-final-create" type="button" class="btn btn-light"><i class="fa fa-user text-success"></i> Create</button>
+    </div>
+</div>-->
+<!-- /.modal-content -->
+<!--</div>-->
+<!-- /.modal-dialog -->
+<!--</div>-->
+<!-- Modal -->
+<!--<div class="modal fade" id="update-noks-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">-->
+-->
+<!--@*<i class="fa fa-plus"></i>*@-->
+<!--<!--Update NOK</h4>
+        <input type="text" id="nok-id" hidden />
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body login-card-body">
+        <div class="row">
+            <div class="mb-3 col-md-12">
+                <div class="input-group form-group bmd-form-group">
+                    <label class="bmd-label-floating">NOK Name</label>
+                    <input id="edit-nok-name" class="form-control" type="text">
+                    <div class="input-group-append">
+                        <div class="input-group-text bg-white border-white">
+                            <span class="fa fa-user text-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 col-md-12">
+                <div class="input-group form-group bmd-form-group">
+                    <label class="bmd-label-floating">NOK Email</label>
+                    <input id="edit-nok-email" class="form-control" type="text">
+                    <div class="input-group-append">
+                        <div class="input-group-text  bg-white border-white">
+                            <span class="fas fa-envelope text-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 col-md-12">
+                <div class="input-group form-group bmd-form-group">
+                    <label class="bmd-label-floating">NOK Cell</label>
+                    <input id="edit-nok-cell" class="form-control" type="text">
+                    <div class="input-group-append">
+                        <div class="input-group-text  bg-white border-white">
+                            <span class="fa fa-phone text-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 col-md-12">
+                <div class="input-group form-group bmd-form-group is-focused">
+                    <label class="bmd-label-floating">Relationship</label>
+                    <select id="edit-nok-relationship" class="form-control">
+                        <option value="Mother">Mother</option>
+                        <option value="Father">Father</option>
+                        <option value="Brother">Brother</option>
+                        <option value="Sister">Sister</option>
+                        <option value="Spouse">Spouse</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="input-group-append">
+                        <div class="input-group-text  bg-white border-white">
+                            <span class="fa fa-home text-success"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer justify-content-right">
+        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+        <button id="tenant-nok-final-update" type="button" class="btn btn-light"><i class="fa fa-user text-success"></i> Update</button>
+    </div>
+</div>-->
+<!-- /.modal-content -->
+<!--</div>-->
+<!-- /.modal-dialog -->
+<!--</div>-->
+<!-- Modal -->
+<!--<div class="modal fade" id="tenants-documents">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="tenants-documents-title" class="modal-title">-->
+-->
+<!--@*<i class="fa fa-plus"></i>*@</h3>
+<input type="text" id="tenant-id" hidden />
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+</button>
+            </div>
+<div class="modal-body">
+    <div class="card">
+        -->
+-->
+<!-- /.card-header -->
+<!--<div class="card-body">
+    <div id="dropzone" class="fade">
+        <h3>Drag & Drop File</h3>
+    </div>
+</div>
+<div class="card-body">
+    <table id="tenant-document-table" class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Filename</th>
+                <th>Date Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+    </table>
+</div>-->
+<!-- /.card-body -->
+<!--</div>
+    </div>
+    <div class="modal-footer justify-content-right">
+        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+    </div>
+</div>-->
+<!-- /.modal-content -->
+<!--</div>-->
+<!-- /.modal-dialog -->
+<!--</div>-->

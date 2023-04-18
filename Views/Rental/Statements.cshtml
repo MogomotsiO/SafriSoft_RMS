@@ -38,22 +38,18 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <span class="text-right mr-1"><button id="CreateUnit" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-home text-success"></i> Create Unit</button></span>
+                            @*<span class="text-right mr-1"><button id="CreateUnit" type="submit" class="btn btn-light" style="text-align:right !important;"><i class="fa fa-home text-success"></i> Create Unit</button></span>*@
                             @*<span class="text-right"><button id="docs-create-view" type="button" class="btn btn-light"><i class="fa fa-plus-circle"></i> Add Documents</button></span>*@
                         </div>
                         <div class="card-body">
-                            <table id="statement-table" class="table">
+                            <table id="statements-table" class="table">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Number</th>
-                                        <th>Name</th>
-                                        <th>Description</th>
-                                        <th>Rooms</th>
-                                        <th>Sharing</th>
-                                        <th>Price</th>
-                                        <th>Assign</th>
-                                        <th>Actions</th>
+                                        <th>Tenant</th>
+                                        <th>Statement From</th>
+                                        <th>Statement To</th>
+                                        <th>Balance</th>
+                                        <th style="width:200px !important;">View Statement</th>
                                     </tr>
                                 </thead>
 
@@ -70,3 +66,165 @@
     </div><!-- /.container-fluid -->
 </div>
 <!-- /.content -->
+<!-- Invoice View Modal -->
+<div class="modal fade" id="statement-view-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            
+            <div class="modal-body">
+                <div class="invoice p-3 mb-3">
+                    <!-- title row -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h4>
+                                <img id="logo" src="" alt="" style="height:150px;" />
+                                <input type="text" id="tenantId" hidden />
+                                <input type="text" id="dateFrom" hidden />
+                                <input type="text" id="dateTo" hidden />
+                            </h4>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- info row -->
+                    <div class="row">
+                        <div class="col-lg-12 table-responsive">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <b>Date:</b> <span id="order-date"></span><br>
+                                            <b>Unit No.: </b><span id="unit-number"></span><br>
+                                            <b>VAT Number:</b> <span id="vat-number"></span>
+                                        </td>
+                                        <td>
+                                            From
+                                            <address>
+                                                <strong><span id="organisation-name"></span></strong><br>
+                                                <span id="organisation-street"></span><br>
+                                                <span id="organisation-suburb"></span>, <span id="organisation-city"></span> <span id="organisation-code"></span><br>
+                                                Phone: <span id="organisation-cell"></span><br>
+                                                Email: <span id="organisation-email"></span>
+                                            </address>
+                                        </td>
+                                        <td>
+                                            To
+                                            <address>
+                                                <strong><span id="customer-name"></span></strong><br>
+                                                <span id="customer-address"></span><br>
+                                                Phone: <span id="customer-cell"></span><br>
+                                                Email: <span id="customer-email"></span>
+                                            </address>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                    <!-- Table row -->
+                    <div class="row">
+                        <div class="col-12 table-responsive">
+                            <table class="table table-bordered">
+                                <thead style="background-color: #28a745; color: #fff; font-family: 'Century Gothic' !important;">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                        </td>
+                                        <td>
+                                            Balance B/F
+                                        </td>
+                                        <td id="balance-bf">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tbody id="statement-transactions">
+                                    
+                                </tbody>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                        </td>
+                                        <td>
+                                            Amount Due
+                                        </td>
+                                        <td id="balance">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                    <!-- /.row -->
+                    <div class="row">
+                        <div class="col-lg-12 table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <p class="lead">Banking Details:</p>
+                                            <table class="table table-bordered">
+                                                <tr>
+                                                    <td><b>Account Name:</b></td>
+                                                    <td><span id="account-name"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><b>Bank:</b></td>
+                                                    <td><span id="bank-name"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><b>Account Number:</b></td>
+                                                    <td><span id="account-no"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><b>Branch:</b></td>
+                                                    <td><span id="bank-branch"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><b>Branch Code:</b></td>
+                                                    <td><span id="branch-code"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><b>Reference:</b></td>
+                                                    <td><span id="client-reference"></span></td>
+                                                </tr>
+
+                                            </table>
+                                            @*<b>Account Name:</b> <span id="account-name"></span><br>
+                                            <b>Bank:</b> <span id="bank-name"></span><br>
+                                            <b>Account Number:</b> <span id="account-no"></span><br>
+                                            <b>Branch:</b> <span id="bank-branch"></span><br>
+                                            <b>Branch Code:</b> <span id="branch-code"></span><br>
+                                            <b>Reference:</b> <span id="client-reference"></span>*@
+                                        </td>
+                                        <td>
+                                            <p class="lead"><b>Tax Invoice & Statement</b></p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer justify-content-right">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                <button id="statement-pdf" type="button" class="btn btn-light" onclick="window.location.href = '/Rental/TenantStatementPDF?TenantId=' + $('#tenantId').text() + '&DateFrom=' + $('#dateFrom').text() + '&DateTo=' + $('#dateTo').text() + '&OrgName=' + $('#organisation-name').text() "><i class="fa fa-download text-success"></i> Generate PDF</button>
+                <button id="statement-pdf-lock" disabled type="button" class="btn btn-light"><i class="fa fa-lock text-purple"></i> Generate PDF - Upgrade Package</button>
+                <button id="send-pdf" type="button" class="btn btn-light" onclick="sendTenantStatementEmail()"><i class="fa fa-envelope text-success"></i> Email Tenant</button>
+                <button id="send-pdf-lock" disabled type="button" class="btn btn-light"><i class="fa fa-lock text-purple"></i> Email Tenant - Upgrade Package</button>
+            </div>
+        </div>
+
+    </div>
+    <!-- /.modal-content -->
+</div>

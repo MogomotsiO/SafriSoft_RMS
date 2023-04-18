@@ -15,7 +15,7 @@ namespace SafriSoftv1._3.Models.Data
         public decimal? TransactionAmount { get; set; }
         public DateTime TransactionDate { get; set; }
         public int TenantId { get; set; }
-        public int TransactionLink { get; set; }
-
+        public int? TransactionLink { get; set; }
+        public int OrganisationId { get; set; }
     }
 }

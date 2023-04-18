@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
+using SafriSoftv1._3.Models.Data;
 
 namespace SafriSoftv1._3.Models
 {
@@ -24,6 +25,10 @@ namespace SafriSoftv1._3.Models
             : base("IdentityDbContext", throwIfV1Schema: false)
         {
         }
+
+        public virtual DbSet<Organisations> Organisations { get; set; }
+        public virtual DbSet<OrganisationSoftware> OrganisationSoftwares { get; set; }
+        public virtual DbSet<Email> Emails { get; set; }
 
         public static ApplicationDbContext Create()
         {
