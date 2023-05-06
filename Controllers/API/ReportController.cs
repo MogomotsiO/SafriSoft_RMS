@@ -55,12 +55,13 @@ namespace SafriSoftv1._3.Controllers.API
             var countUsers = 0;
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
 
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString()))
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status] from [{0}].[dbo].[Tenants] where Status = '{1}'", conn.Database, "Active");
+                cmd.CommandText = string.Format("SELECT [Id],[TenantName],[TenantEmail],[TenantCell],[TenantAddress],[TenantWorkAddress],[TenantWorkCell],[DateTenantCreated],[DateLeaseStart],[DateLeaseEnd],[Status] from [{0}].[dbo].[Tenants] where OrganisationId = '{2}' AND Status = '{1}'", conn.Database, "Active", orgId);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -100,12 +101,13 @@ namespace SafriSoftv1._3.Controllers.API
             var UnitViewModel = new List<UnitViewModel>();
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
 
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString()))
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[UnitNumber],[UnitName],[UnitRooms],[UnitDescription],[UnitPrice],[Sharing] from [{0}].[dbo].[Units] where Status = '{1}'", conn.Database, "Active");
+                cmd.CommandText = string.Format("SELECT [Id],[UnitNumber],[UnitName],[UnitRooms],[UnitDescription],[UnitPrice],[Sharing] from [{0}].[dbo].[Units] where OrganisationId = '{2}' AND Status = '{1}'", conn.Database, "Active", orgId);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -151,6 +153,7 @@ namespace SafriSoftv1._3.Controllers.API
             var transactionViewModel = new List<TransactionReportsViewModel>();
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
 
 
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString()))
@@ -161,7 +164,7 @@ namespace SafriSoftv1._3.Controllers.API
 
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transactions] Where TransactionCode <> '{1}'", conn.Database, 15);
+                cmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transactions] Where OrganisationId = '{2}' AND TransactionCode <> '{1}'", conn.Database, 15, orgId);
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -193,6 +196,7 @@ namespace SafriSoftv1._3.Controllers.API
             var transactionViewModel = new List<TransactionReportsViewModel>();
             var organisationClaim = userManager.GetClaims(userId).First(x => x.Type == "Organisation");
             var getOrgClaim = organisationClaim.Value;
+            var orgId = GetOrganisationId(getOrgClaim);
 
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["SafriSoftDbContext"].ToString()))
             {
@@ -202,7 +206,7 @@ namespace SafriSoftv1._3.Controllers.API
 
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transactions] Where TransactionCode = '{1}'", conn.Database, 15);
+                cmd.CommandText = string.Format("SELECT [Id],[TransactionCode],[TransactionName],[TransactionAmount],[TransactionDate],[TenantId] from [{0}].[dbo].[Transactions] Where OrganisationId = '{2}' AND TransactionCode = '{1}'", conn.Database, 15, orgId);
 
 
                 using (var reader = cmd.ExecuteReader())

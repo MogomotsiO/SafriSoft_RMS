@@ -103,7 +103,7 @@ namespace SafriSoftv1._3.Controllers.API
                     //unitsAvailable = totalUnits;
 
                     var unitsOccupiedCmd = conn.CreateCommand();
-                    unitsOccupiedCmd.CommandText = string.Format("SELECT count(DISTINCT a.[UnitId]) from [{0}].[dbo].[Assigneds] a JOIN [{0}].[dbo].[Units] u on u.Id = a.UnitId ", conn.Database);
+                    unitsOccupiedCmd.CommandText = string.Format("SELECT count(DISTINCT a.[UnitId]) from [{0}].[dbo].[Assigneds] a JOIN [{0}].[dbo].[Units] u on u.Id = a.UnitId where OrganisationId = '{1}'", conn.Database, orgId);
                     try
                     {
                         unitsOccupied = (Int32)unitsOccupiedCmd.ExecuteScalar();

@@ -104,9 +104,9 @@ namespace SafriSoftv1._3.Controllers
 
             var organisationName = userData.Claims.FirstOrDefault(x => x.ClaimType == "Organisation").ClaimValue;
             var organisationId = applicationDb.Organisations.FirstOrDefault(x => x.OrganisationName == organisationName).OrganisationId;
-            var checkSoftware = applicationDb.OrganisationSoftwares.FirstOrDefault(x => x.OrganisationId == organisationId && x.SoftwareId == 2).Granted;
+            var checkSoftware = applicationDb.OrganisationSoftwares.FirstOrDefault(x => x.OrganisationId == organisationId && x.SoftwareId == 2);
 
-            if (!checkSoftware)
+            if (checkSoftware != null && !checkSoftware.Granted)
             {
                 ModelState.AddModelError("", "This account does not have access to this software");
                 return View(model);
