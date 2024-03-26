@@ -223,6 +223,7 @@
     <Compile Include="Models\Data\Charge.cs" />
     <Compile Include="Models\Data\InboxMessages.cs" />
     <Compile Include="Models\Data\InboxReplies.cs" />
+    <Compile Include="Models\Data\LandlordInvoice.cs" />
     <Compile Include="Models\Data\NOK.cs" />
     <Compile Include="Models\Data\Organisations.cs" />
     <Compile Include="Models\Data\OrganisationSoftware.cs" />
